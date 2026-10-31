@@ -174,7 +174,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.8.0</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.8.1</span></div>
 </aside>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -799,9 +799,11 @@ if('serviceWorker' in navigator){ addEventListener('load',()=>navigator.serviceW
 (function(){
   const btn=document.getElementById('installBtn'), sheet=document.getElementById('iosSheet');
   const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const ua=navigator.userAgent;
+  const isIOS=/iphone|ipod/i.test(ua);           // só iPhone
+  const isAndroid=/android/i.test(ua);           // celulares Android
   let deferred=null;
-  if(standalone) return;                       // já está instalado
+  if(standalone || !(isIOS||isAndroid)) return;  // já instalado, ou computador/tablet: sem botão
   addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; btn.classList.add('show'); });
   if(isIOS) btn.classList.add('show');         // iOS não tem prompt automático
   btn.onclick=async()=>{
