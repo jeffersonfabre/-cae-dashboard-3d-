@@ -2,8 +2,18 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CAE 3D Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="description" content="Painel 3D do Centro de Aquisições Específicas (CAE)">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CAE Dashboard">
+<meta name="application-name" content="CAE Dashboard">
+<title>CAE Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -82,6 +92,26 @@
   .note{margin-top:16px;font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px dashed var(--line);padding:10px 12px;border-radius:10px}
   .credit{padding:10px 22px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
 
+  /* Safe areas (notch iPhone) */
+  .topbar{padding-top:calc(14px + env(safe-area-inset-top));padding-left:calc(20px + env(safe-area-inset-left));padding-right:calc(20px + env(safe-area-inset-right))}
+  .hint{bottom:calc(20px + env(safe-area-inset-bottom))}
+  .credit{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+
+  /* Instalar app */
+  #installBtn{display:none;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;cursor:pointer;background:var(--orange);color:#1a0f02;border:0;font:700 12px Inter,sans-serif;padding:7px 12px;border-radius:999px;pointer-events:auto}
+  #installBtn.show{display:inline-flex}
+  #installBtn svg{width:14px;height:14px}
+  #iosSheet{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55)}
+  #iosSheet.open{display:flex}
+  #iosSheet .card{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom));}
+  #iosSheet .head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  #iosSheet .head img{width:52px;height:52px;border-radius:12px}
+  #iosSheet h3{font-size:17px}
+  #iosSheet small{color:var(--muted);font-size:12px}
+  #iosSheet ol{margin:6px 0 16px 18px;color:var(--text);font-size:14px;line-height:1.9}
+  #iosSheet .ico{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);vertical-align:middle;margin:0 2px}
+  #iosSheet button{width:100%;padding:12px;border:0;border-radius:12px;background:var(--panel2);color:var(--text);font:600 14px Inter,sans-serif;cursor:pointer}
+
   /* Loader */
   #loader{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:20;transition:opacity .6s}
   #loader.hide{opacity:0;pointer-events:none}
@@ -89,7 +119,7 @@
   @keyframes s{to{transform:rotate(360deg)}}
 
   @media (max-width:720px){
-    .chips{display:none}
+    .chips .chip{display:none}
     .hint{left:16px;right:16px;bottom:16px;max-width:none}
     #panel{top:auto;bottom:0;height:78%;width:100%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;transform:translateY(105%)}
     .bar-row{grid-template-columns:90px 1fr 64px}
@@ -97,6 +127,17 @@
 </style>
 </head>
 <body>
+<div id="iosSheet" role="dialog" aria-modal="true" aria-labelledby="iosTitle">
+  <div class="card">
+    <div class="head"><img src="/icons/apple-touch-icon.png" alt=""><div><h3 id="iosTitle">Instalar CAE Dashboard</h3><small>Adicione à Tela de Início do iPhone</small></div></div>
+    <ol>
+      <li>No Safari, toque em <span class="ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2f7bff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 12v8h14v-8"/></svg></span> <b>Compartilhar</b></li>
+      <li>Escolha <b>Adicionar à Tela de Início</b></li>
+      <li>Confirme o nome <b>CAE Dashboard</b> e toque em <b>Adicionar</b></li>
+    </ol>
+    <button id="iosClose">Entendi</button>
+  </div>
+</div>
 <div id="loader"><div class="spin"></div></div>
 <div id="scene"></div>
 <div id="tip"></div>
@@ -107,6 +148,7 @@
     <div><h1>Centro de Aquisições Específicas</h1><small>UASG 120195 · Rio de Janeiro · Painel 3D</small></div>
   </div>
   <div class="chips">
+    <button id="installBtn" aria-label="Instalar o app CAE Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar app</button>
     <div class="chip">Exercício <b>2026</b></div>
     <div class="chip">Atualizado <b id="upd"></b></div>
   </div>
@@ -132,7 +174,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.7.0</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.8.0</span></div>
 </aside>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -749,6 +791,27 @@ function animate(){
 animate();
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); targetShift(!!selected); });
 setTimeout(()=>document.getElementById('loader').classList.add('hide'),400);
+
+/* =========================================================
+   APP INSTALÁVEL (PWA) — iPhone e Android
+   ========================================================= */
+if('serviceWorker' in navigator){ addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{})); }
+(function(){
+  const btn=document.getElementById('installBtn'), sheet=document.getElementById('iosSheet');
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  let deferred=null;
+  if(standalone) return;                       // já está instalado
+  addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; btn.classList.add('show'); });
+  if(isIOS) btn.classList.add('show');         // iOS não tem prompt automático
+  btn.onclick=async()=>{
+    if(deferred){ deferred.prompt(); await deferred.userChoice; deferred=null; btn.classList.remove('show'); }
+    else if(isIOS){ sheet.classList.add('open'); }
+  };
+  document.getElementById('iosClose').onclick=()=>sheet.classList.remove('open');
+  sheet.addEventListener('click',e=>{ if(e.target===sheet) sheet.classList.remove('open'); });
+  addEventListener('appinstalled',()=>btn.classList.remove('show'));
+})();
 </script>
 </body>
 </html>

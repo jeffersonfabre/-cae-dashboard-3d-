@@ -5,4 +5,11 @@ Painel 3D (three.js) do Centro de Aquisições Específicas (CAE, UASG 120195): 
 - Página única: `index.html` (sem build)
 - Dados de exemplo; integração futura com Tesouro Gerencial, SIAFI e Comprasnet/PNCP
 
-Desenvolvido por **DomDevLabs** · v1.7.0
+Desenvolvido por **DomDevLabs** · v1.8.0
+
+## Instalar no celular
+
+- **Android (Chrome):** toque em **Instalar app** no topo do painel, ou no menu ⋮ > *Instalar app*.
+- **iPhone (Safari):** toque em **Instalar app** e siga o passo a passo: Compartilhar > *Adicionar à Tela de Início*.
+
+O ícone é o brasão do CAE e o app abre em tela cheia com o nome **CAE Dashboard**.
