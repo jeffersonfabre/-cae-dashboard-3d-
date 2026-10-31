@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
 <meta name="description" content="Painel 3D do Centro de Aquisições Específicas (CAE)">
-<link rel="manifest" href="/manifest.webmanifest">
+<script>
+/* O manifesto (que habilita "instalar app") só é anexado em celulares iPhone/Android.
+   No computador e no iPad ele não existe, então o navegador não oferece instalação. */
+(function(){var ua=navigator.userAgent;
+  if(/iphone|ipod/i.test(ua)||(/android/i.test(ua)&&/mobile/i.test(ua))){
+    var l=document.createElement('link');l.rel='manifest';l.href='/manifest.webmanifest';document.head.appendChild(l);}
+})();
+</script>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -71,17 +78,17 @@
   .kpi .l{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
   .kpi .v{font-size:22px;font-weight:800;margin-top:4px}
   .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
-  .tabs{display:flex;gap:6px;padding:0 22px;border-bottom:1px solid var(--line);overflow-x:auto}
-  .tab{all:unset;cursor:pointer;padding:10px 10px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+  .tabs{display:flex;flex-wrap:wrap;gap:0 14px;padding:0 22px;border-bottom:1px solid var(--line)}
+  .tab{all:unset;cursor:pointer;padding:10px 2px;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
   .tab.active{color:var(--text);border-color:var(--accent,var(--blue))}
   .p-body{flex:1;overflow:auto;padding:18px 22px 28px}
   .p-body h3{font-size:14px;font-weight:700;margin:4px 0 10px}
   .bars{display:flex;flex-direction:column;gap:9px;margin-bottom:20px}
-  .bar-row{display:grid;grid-template-columns:120px 1fr 74px;align-items:center;gap:10px;font-size:12.5px}
+  .bar-row{display:grid;grid-template-columns:128px 1fr 104px;align-items:center;gap:10px;font-size:12.5px}
   .bar-row .n{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .track{height:10px;background:#0a1324;border-radius:6px;overflow:hidden}
   .fill{height:100%;border-radius:6px;width:0;transition:width .8s ease}
-  .bar-row .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .bar-row .val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
   table{width:100%;border-collapse:collapse;font-size:12.5px}
   th{text-align:left;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line);font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
   td{padding:9px 6px;border-bottom:1px solid #1a2843;font-variant-numeric:tabular-nums}
@@ -122,7 +129,7 @@
     .chips .chip{display:none}
     .hint{left:16px;right:16px;bottom:16px;max-width:none}
     #panel{top:auto;bottom:0;height:78%;width:100%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;transform:translateY(105%)}
-    .bar-row{grid-template-columns:90px 1fr 64px}
+    .bar-row{grid-template-columns:96px 1fr 92px}
   }
 </style>
 </head>
@@ -174,7 +181,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.8.1</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.9.0</span></div>
 </aside>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -198,43 +205,26 @@ const DATA = {
       {t:'Resumo por divisão', bars:[
         ['Contrato', 82, brl(96400000)], ['Obtenção', 71, brl(61200000)], ['Administrativa', 64, brl(26900000)]
       ], table:{cols:['Divisão','Responsável','Pendências'], rows:[
-        ['Contrato','Chefe DC','4 NE a liquidar >60d'],['Obtenção','Chefe DO','3 pregões em recurso'],['Administrativa','Chefe DA','2 inventários abertos']
+        ['Contrato','Chefe DC','4 NE a liquidar >60d'],['Obtenção','Chefe DO','3 pregões em recurso'],['Administrativa','Chefe DA','7 liquidações sem ateste']
       ]}}
     ]
   },
   contrato:{
-    tag:'Divisão', color:'#2f7bff', title:'Divisão de Contrato', sub:'Gestão de contratos, empenhos e execução orçamentária',
+    tag:'Divisão', color:'#2f7bff', title:'Divisão de Contrato', sub:'Contratos, execução orçamentária, restos a pagar, empenhos e créditos',
     kpis:[
-      {l:'NE emitidas', v:'1.248', s:brl(112300000)+' empenhados'},
-      {l:'Contratos vigentes', v:'87', s:brl(214700000)+' em valor global'},
-      {l:'NC recebidas', v:'312', s:brl(184500000)+' descentralizados'},
-      {l:'Execução orçamentária', v:'78,4%', s:'Meta do trimestre: 80%'}
+      {l:'Contratos vigentes', v:'87', s:brl(214700000)+' em valor global', tab:0},
+      {l:'Execução orçamentária', v:'78,4%', s:'Meta do trimestre: 80%', tab:1},
+      {l:'Restos a pagar', v:brl(38600000), s:'Inscritos para pagamento', tab:2},
+      {l:'Notas de empenho', v:'1.248', s:brl(112300000)+' empenhados', tab:3}
     ],
     tabs:[
-      {t:'NE', bars:[
-        ['A liquidar',38,brl(42700000)],['Em liquidação',12,brl(13500000)],['Liquidado a pagar',9,brl(10100000)],['Pago',41,brl(46000000)]
-      ], table:{cols:['NE','Favorecido','Valor','Situação'], rows:[
-        ['2026NE000812','Fornecedor A Ltda','R$ 1.240.000','<span class="st warn">A liquidar</span>'],
-        ['2026NE000809','Empresa B S.A.','R$ 588.300','<span class="st ok">Pago</span>'],
-        ['2026NE000797','Comércio C ME','R$ 96.450','<span class="st ok">Pago</span>'],
-        ['2026NE000781','Serviços D Ltda','R$ 2.015.900','<span class="st bad">> 60 dias</span>'],
-        ['2026NE000774','Indústria E','R$ 412.000','<span class="st warn">Em liquidação</span>']
-      ]}},
-      {t:'Contratos Vigentes', bars:[
+      {t:'Contratos', bars:[
         ['Até 90 dias',14,'12 contratos'],['90 a 180 dias',22,'19 contratos'],['180 a 365 dias',30,'26 contratos'],['> 1 ano',34,'30 contratos']
       ], table:{cols:['Contrato','Objeto','Fim vigência','Status'], rows:[
         ['012/CAE/2024','Manutenção de equipamentos','15/12/2026','<span class="st bad">48 dias</span>'],
         ['027/CAE/2025','Suporte de TI','28/01/2027','<span class="st warn">92 dias</span>'],
         ['031/CAE/2025','Material aeronáutico','30/06/2027','<span class="st ok">Vigente</span>'],
         ['004/CAE/2026','Serviços de engenharia','10/03/2028','<span class="st ok">Vigente</span>']
-      ]}},
-      {t:'NC', bars:[
-        ['COMGAP',44,brl(81200000)],['COMGEP',21,brl(38700000)],['DECEA',18,brl(33200000)],['Outros',17,brl(31400000)]
-      ], table:{cols:['NC','Emitente','Valor','Data'], rows:[
-        ['2026NC000412','COMGAP','R$ 4.500.000','21/10/2026'],
-        ['2026NC000398','COMGEP','R$ 1.350.000','14/10/2026'],
-        ['2026NC000377','DECEA','R$ 589.790','02/10/2026'],
-        ['2026NC000351','SEFA','R$ 241.590','25/09/2026']
       ]}},
       {t:'Execução Orçamentária', bars:[
         ['Recebido',100,brl(184500000)],['Empenhado',78,brl(144600000)],['Liquidado',52,brl(95900000)],['Pago',47,brl(86700000)]
@@ -243,25 +233,52 @@ const DATA = {
         ['339039 Serviços PJ','R$ 52,7 mi','R$ 44,1 mi','84%'],
         ['449052 Equip. permanente','R$ 71,4 mi','R$ 52,3 mi','73%'],
         ['449051 Obras','R$ 22,2 mi','R$ 17,2 mi','77%']
+      ]}},
+      {t:'Restos a Pagar', bars:[
+        ['NP a liquidar',46,brl(17700000)],['NP em liquidação',9,brl(3500000)],['NP liq. a pagar',15,brl(5800000)],['Processados a pagar',12,brl(4600000)],['Pagos no exercício',18,brl(7000000)]
+      ], table:{cols:['NE (RP)','Favorecido','Saldo','Situação'], rows:[
+        ['2025NE000731','Fornecedor F Ltda','R$ 1.820.000','<span class="st warn">A liquidar</span>'],
+        ['2025NE000688','Empresa G S.A.','R$ 940.500','<span class="st warn">Em liquidação</span>'],
+        ['2025NE000642','Serviços H ME','R$ 312.800','<span class="st ok">Liquidado a pagar</span>'],
+        ['2024NE000519','Indústria I','R$ 2.405.000','<span class="st bad">Cancelamento 31/12</span>']
+      ]}},
+      {t:'Nota de Empenho', bars:[
+        ['A liquidar',38,brl(42700000)],['Em liquidação',12,brl(13500000)],['Liquidado a pagar',9,brl(10100000)],['Pago',41,brl(46000000)]
+      ], table:{cols:['NE','Favorecido','Valor','Situação'], rows:[
+        ['2026NE000812','Fornecedor A Ltda','R$ 1.240.000','<span class="st warn">A liquidar</span>'],
+        ['2026NE000809','Empresa B S.A.','R$ 588.300','<span class="st ok">Pago</span>'],
+        ['2026NE000797','Comércio C ME','R$ 96.450','<span class="st ok">Pago</span>'],
+        ['2026NE000781','Serviços D Ltda','R$ 2.015.900','<span class="st bad">> 60 dias</span>'],
+        ['2026NE000774','Indústria E','R$ 412.000','<span class="st warn">Em liquidação</span>']
+      ]}},
+      {t:'Nota de Crédito', bars:[
+        ['COMGAP',44,brl(81200000)],['COMGEP',21,brl(38700000)],['DECEA',18,brl(33200000)],['Outros',17,brl(31400000)]
+      ], table:{cols:['NC','Emitente','Valor','Data'], rows:[
+        ['2026NC000412','COMGAP','R$ 4.500.000','21/10/2026'],
+        ['2026NC000398','COMGEP','R$ 1.350.000','14/10/2026'],
+        ['2026NC000377','DECEA','R$ 589.790','02/10/2026'],
+        ['2026NC000351','SEFA','R$ 241.590','25/09/2026']
       ]}}
     ]
   },
   obtencao:{
-    tag:'Divisão', color:'#22c38e', title:'Divisão de Obtenção', sub:'Licitações, atas de registro de preço e contratações diretas',
+    tag:'Divisão', color:'#22c38e', title:'Divisão de Obtenção', sub:'Controle de licitações e atas de registro de preço',
     kpis:[
-      {l:'Pregões em andamento', v:'18', s:'5 em fase de recurso'},
-      {l:'Atas vigentes (SRP)', v:'42', s:'7 vencem em 60 dias'},
-      {l:'Dispensas / Inexig.', v:'16', s:'Ano corrente'},
-      {l:'Economia obtida', v:'23,7%', s:'Estimado × homologado'}
+      {l:'Licitações em andamento', v:'18', s:'5 em fase de recurso', tab:0},
+      {l:'Atas SRP vigentes', v:'42', s:'7 vencem em 60 dias', tab:1},
+      {l:'Dispensas / Inexig.', v:'16', s:'Ano corrente', tab:0},
+      {l:'Economia obtida', v:'23,7%', s:'Estimado × homologado', tab:0}
     ],
     tabs:[
-      {t:'Pregões', bars:[
+      {t:'Controle Licitações', bars:[
         ['Planejamento',20,'6'],['Publicado',30,'9'],['Em disputa',15,'4'],['Recurso',17,'5'],['Homologado',18,'6']
       ], table:{cols:['Pregão','Objeto','Fase','Valor est.'], rows:[
         ['90021/2026','Peças de reposição','<span class="st warn">Recurso</span>','R$ 3,8 mi'],
         ['90024/2026','Equip. médico-hospitalar','<span class="st ok">Homologado</span>','R$ 1,2 mi'],
         ['90027/2026','Serviço de manutenção','Em disputa','R$ 6,4 mi'],
         ['90030/2026','Material de TI','Publicado','R$ 2,1 mi']
+      ]}, table2:{title:'Contratação direta', cols:['Processo','Fundamento','Valor'], rows:[
+        ['DL 008/2026','Art. 75, II','R$ 57.800'],['IN 003/2026','Art. 74, I','R$ 412.000'],['DL 011/2026','Art. 75, II','R$ 49.950']
       ]}},
       {t:'Atas SRP', bars:[
         ['Até 60 dias',17,'7 atas'],['60 a 180 dias',31,'13 atas'],['> 180 dias',52,'22 atas']
@@ -269,37 +286,38 @@ const DATA = {
         ['ARP 015/2025','Pneus aeronáuticos','38%','<span class="st bad">05/12/2026</span>'],
         ['ARP 022/2025','Material elétrico','61%','<span class="st warn">19/02/2027</span>'],
         ['ARP 004/2026','Uniformes','84%','<span class="st ok">30/08/2027</span>']
-      ]}},
-      {t:'Contratação direta', bars:[
-        ['Dispensa (art. 75)',69,'11'],['Inexigibilidade (art. 74)',31,'5']
-      ], table:{cols:['Processo','Fundamento','Valor'], rows:[
-        ['DL 008/2026','Art. 75, II','R$ 57.800'],['IN 003/2026','Art. 74, I','R$ 412.000'],['DL 011/2026','Art. 75, II','R$ 49.950']
-      ]}},
-      {t:'PCA 2026', bars:[
-        ['Executado',58,'112 itens'],['Em processo',27,'52 itens'],['Não iniciado',15,'29 itens']
-      ]}
+      ]}}
     ]
   },
   adm:{
-    tag:'Divisão', color:'#a66bff', title:'Divisão Administrativa', sub:'Pessoal, patrimônio, documentação e apoio',
+    tag:'Divisão', color:'#a66bff', title:'Divisão Administrativa', sub:'Liquidação, ordem bancária e efetivo',
     kpis:[
-      {l:'Efetivo', v:'146', s:'Militares e civis'},
-      {l:'Bens patrimoniais', v:'3.912', s:'2 inventários abertos'},
-      {l:'Documentos no mês', v:'587', s:'Ofícios, memorandos, DIEx'},
-      {l:'Escala de serviço', v:'100%', s:'Cobertura do mês'}
+      {l:'Liquidações no mês', v:'64', s:brl(9800000)+' liquidados', tab:0},
+      {l:'Pendentes de ateste', v:'7', s:'2 acima de 10 dias', tab:0},
+      {l:'Ordens bancárias', v:'58', s:brl(8900000)+' pagos no mês', tab:1},
+      {l:'Efetivo', v:'146', s:'Militares e civis', tab:2}
     ],
     tabs:[
+      {t:'Liquidação', bars:[
+        ['Liquidadas no prazo',72,'46'],['Em análise',14,'9'],['Pendentes de ateste',11,'7'],['Devolvidas',3,'2']
+      ], table:{cols:['Documento','Credor','Valor','Situação'], rows:[
+        ['2026NS000934','Fornecedor A Ltda','R$ 620.000','<span class="st ok">Liquidada</span>'],
+        ['2026NS000931','Empresa B S.A.','R$ 288.300','<span class="st warn">Em análise</span>'],
+        ['2026NS000927','Comércio C ME','R$ 96.450','<span class="st bad">Sem ateste 12d</span>'],
+        ['2026NS000922','Serviços D Ltda','R$ 1.015.900','<span class="st ok">Liquidada</span>']
+      ]}},
+      {t:'Ordem Bancária', bars:[
+        ['Pagas',81,'47'],['Em processamento',12,'7'],['Aguardando financeiro',7,'4']
+      ], table:{cols:['OB','Favorecido','Valor','Data'], rows:[
+        ['2026OB800412','Fornecedor A Ltda','R$ 620.000','27/10/2026'],
+        ['2026OB800409','Empresa E S.A.','R$ 410.200','26/10/2026'],
+        ['2026OB800401','Serviços D Ltda','R$ 1.015.900','23/10/2026'],
+        ['2026OB800397','Comércio C ME','R$ 96.450','22/10/2026']
+      ]}},
       {t:'Efetivo', bars:[
         ['Oficiais',18,'26'],['Graduados',52,'76'],['Praças',16,'23'],['Civis',14,'21']
-      ]},
-      {t:'Patrimônio', bars:[
-        ['Em uso',86,'3.364'],['Ocioso',8,'313'],['Em manutenção',4,'157'],['Baixa',2,'78']
-      ]},
-      {t:'Documentação', table:{cols:['Tipo','Recebidos','Expedidos'], rows:[
-        ['Ofícios','142','118'],['Memorandos','96','87'],['DIEx','64','80']
-      ]}},
-      {t:'Escala', table:{cols:['Escala','Efetivo','Próx. troca'], rows:[
-        ['Preta','32','28/10/2026'],['Vermelha','28','01/11/2026'],['Roxa','24','05/11/2026']
+      ], table:{cols:['Setor','Efetivo','Em serviço'], rows:[
+        ['Divisão de Contrato','38','4'],['Divisão de Obtenção','44','5'],['Divisão Administrativa','52','6'],['Comando e Assessorias','12','1']
       ]}}
     ]
   }
@@ -354,15 +372,23 @@ function facadeTex(base, cols, rows, lit){
     g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(0,h-8,w,8);
   });
 }
-function label(text, color){
-  const t=canvasTex(512,128,(g,w,h)=>{
-    g.fillStyle='rgba(11,18,32,.88)';
+function label(text, color, items=[]){
+  const W=640, HEAD=96, LINE=46, PAD=22, H=HEAD+(items.length?items.length*LINE+PAD:0);
+  const t=canvasTex(W,H,(g,w,h)=>{
+    g.fillStyle='rgba(11,18,32,.9)';
     const r=30; g.beginPath(); g.moveTo(r,0); g.arcTo(w,0,w,h,r); g.arcTo(w,h,0,h,r); g.arcTo(0,h,0,0,r); g.arcTo(0,0,w,0,r); g.fill();
-    g.fillStyle=color; g.fillRect(24,h/2-14,10,28);
-    g.fillStyle='#fff'; g.font='700 44px Inter, sans-serif'; g.textBaseline='middle'; g.fillText(text,52,h/2+2);
+    g.fillStyle=color; g.fillRect(24,HEAD/2-15,10,30);
+    g.fillStyle='#fff'; g.font='700 44px Inter, sans-serif'; g.textBaseline='middle'; g.fillText(text,52,HEAD/2+2);
+    if(items.length){
+      g.fillStyle='rgba(255,255,255,.14)'; g.fillRect(24,HEAD-4,w-48,2);
+      g.font='500 34px Inter, sans-serif';
+      items.forEach((it,i)=>{ const y=HEAD+8+i*LINE+LINE/2;
+        g.fillStyle=color; g.beginPath(); g.arc(46,y,6,0,Math.PI*2); g.fill();
+        g.fillStyle='#dbe6f6'; g.fillText(it,68,y+1); });
+    }
   });
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true,sizeAttenuation:false}));
-  s.scale.set(.15,.0375,1); s.renderOrder=10; return s;
+  const k=(innerWidth<720?.14:.2)/512; s.scale.set(W*k,H*k,1); s.center.set(.5,0); s.renderOrder=10; return s;
 }
 function box(w,h,d,mat){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.castShadow=m.receiveShadow=true; return m; }
 
@@ -425,7 +451,8 @@ function building(key,{w,h,d,color,accent,x,z,ry=0,floors=3,cols=8}){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.9,.12,12,40),new THREE.MeshBasicMaterial({color:new THREE.Color(accent)}));
   const top=key==='hq'?h+5.6:h+2.3; // no Comando, acima do frontão
   ring.rotation.x=Math.PI/2; ring.position.y=top; g.add(ring);
-  const lab=label(DATA[key].title.replace('Divisão de ','Div. ').replace('Divisão ','Div. '),accent); lab.position.y=top+1.1; g.add(lab);
+  const topics=key==='hq'?[]:DATA[key].tabs.map(t=>t.t);
+  const lab=label(DATA[key].title.replace('Divisão de ','Divisão '),accent,topics); lab.position.y=top+.7; g.add(lab);
 
   g.userData={key,ring,band,baseY:top};
   g.traverse(o=>{ if(o.isMesh) pickables.push(o); });
@@ -616,7 +643,7 @@ const TWR={};
   const dome=new THREE.Mesh(new THREE.SphereGeometry(1.6,20,14,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.6}));
   dome.position.set(-4.5,2.4,1); dome.castShadow=true; g.add(dome);
   const domeBase=box(3.4,2.4,3.4,new THREE.MeshStandardMaterial({color:0xe9ecf1})); domeBase.position.set(-4.5,1.2,1); g.add(domeBase);
-  const lab=label('Radar','#2f7bff'); lab.position.y=H+5; g.add(lab);
+  const lab=label('Radar','#2f7bff'); lab.position.y=H+4; g.add(lab);
   TWR.radar=rot;
   scene.add(g);
 })();
@@ -737,7 +764,7 @@ function openDivision(key){
   const tag=document.getElementById('pTag'); tag.textContent=d.tag; tag.style.background=d.color+'26'; tag.style.color=d.color;
   document.getElementById('pTitle').textContent=d.title;
   document.getElementById('pSub').textContent=d.sub;
-  document.getElementById('pKpis').innerHTML=d.kpis.map((k,i)=>`<div class="kpi" data-i="${i}"><div class="l">${k.l}</div><div class="v">${k.v}</div><div class="s">${k.s}</div></div>`).join('');
+  document.getElementById('pKpis').innerHTML=d.kpis.map((k,i)=>`<div class="kpi" data-i="${k.tab??i}"><div class="l">${k.l}</div><div class="v">${k.v}</div><div class="s">${k.s}</div></div>`).join('');
   document.getElementById('pTabs').innerHTML=d.tabs.map((t,i)=>`<button class="tab" data-i="${i}">${t.t}</button>`).join('');
   document.querySelectorAll('#pTabs .tab').forEach(b=>b.onclick=()=>showTab(+b.dataset.i));
   // KPI clica e abre aba correspondente (quando existir)
@@ -748,12 +775,14 @@ function openDivision(key){
 function showTab(i){
   const d=DATA[selected], t=d.tabs[i];
   document.querySelectorAll('#pTabs .tab').forEach((b,j)=>b.classList.toggle('active',j===i));
-  document.querySelectorAll('#pKpis .kpi').forEach((b,j)=>b.classList.toggle('active',j===i && d.tabs.length>1));
+  document.querySelectorAll('#pKpis .kpi').forEach(b=>b.classList.toggle('active',+b.dataset.i===i && d.tabs.length>1));
   let h='';
   if(t.bars){ h+=`<h3>${t.t}</h3><div class="bars">`+t.bars.map(([n,p,v])=>
     `<div class="bar-row"><span class="n" title="${n}">${n}</span><div class="track"><div class="fill" data-w="${p}" style="background:${d.color}"></div></div><span class="val">${v}</span></div>`).join('')+`</div>`; }
   if(t.table){ h+=`<h3>Detalhamento</h3><table><thead><tr>${t.table.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`+
     t.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')+`</tbody></table>`; }
+  if(t.table2){ h+=`<h3 style="margin-top:20px">${t.table2.title}</h3><table><thead><tr>${t.table2.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`+
+    t.table2.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')+`</tbody></table>`; }
   h+=`<div class="note">Dados de exemplo para visualização do layout. Na versão final, este painel será alimentado pelo Tesouro Gerencial, SIAFI e Comprasnet/PNCP.</div>`;
   const body=document.getElementById('pBody'); body.innerHTML=h;
   requestAnimationFrame(()=>body.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
@@ -795,13 +824,14 @@ setTimeout(()=>document.getElementById('loader').classList.add('hide'),400);
 /* =========================================================
    APP INSTALÁVEL (PWA) — iPhone e Android
    ========================================================= */
-if('serviceWorker' in navigator){ addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{})); }
+const IS_PHONE=/iphone|ipod/i.test(navigator.userAgent)||(/android/i.test(navigator.userAgent)&&/mobile/i.test(navigator.userAgent));
+if(IS_PHONE && 'serviceWorker' in navigator){ addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{})); }
 (function(){
   const btn=document.getElementById('installBtn'), sheet=document.getElementById('iosSheet');
   const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   const ua=navigator.userAgent;
   const isIOS=/iphone|ipod/i.test(ua);           // só iPhone
-  const isAndroid=/android/i.test(ua);           // celulares Android
+  const isAndroid=/android/i.test(ua)&&/mobile/i.test(ua); // celulares Android (não tablets)
   let deferred=null;
   if(standalone || !(isIOS||isAndroid)) return;  // já instalado, ou computador/tablet: sem botão
   addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; btn.classList.add('show'); });
