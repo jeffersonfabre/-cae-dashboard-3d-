@@ -91,6 +91,27 @@ def num(x):
     x=x.replace('R$','').strip().replace('.','').replace(',','.')
     return round(float(x),2) if x not in ('','-') else 0.0
 
+
+def gerar_ne(sheets, siglas):
+    """Uma linha por NE (sem repetição). Formato exibido: 2026NE008575 (do original 120195000012026NE008575)."""
+    L=[l for l in sheets['NE'].split('\n') if l.strip()]
+    d=pd.read_csv(io.StringIO('\n'.join(L)),dtype=str,keep_default_na=False)
+    d=d.drop_duplicates('NE',keep='first').copy()          # a mesma NE nunca entra duas vezes
+    d['v']=d['Valor a NE'].map(num)
+    faltam=sorted(set(d['UGR'])-set(siglas)); assert not faltam, f'UGR sem sigla na aba NE: {faltam}'
+    tabs={k:[] for k in ('ugr','gc','ptres','fonte','pi','nd')}
+    def idx(k,v):
+        t=tabs[k]
+        if v not in t: t.append(v)
+        return t.index(v)
+    rows=[]
+    for _,r in d.sort_values(['Data','NE'],key=lambda c:c.str[6:]+c.str[3:5]+c.str[:2] if c.name=='Data' else c,ascending=False).iterrows():
+        dd,mm,aa=r['Data'].split('/')
+        ne=re.sub(r'^\d+(\d{4}NE\d+)$',r'\1',r['NE'])
+        rows.append([f'{aa}-{mm}-{dd}',ne,idx('ugr',r['UGR']),idx('gc',r['Grande Cmdo']),idx('ptres',r['PTRES']),
+                     idx('fonte',r['Fonte Recursos']),idx('pi',r['PI']),idx('nd',r['ND Detalhada']),r['Descrição'].strip(),r['v']])
+    return {'cols':['data','ne','ugr','gc','ptres','fonte','pi','nd','desc','valor'],'t':tabs,'rows':rows}
+
 def main(src, html='index.html'):
     txt=open(src,encoding='utf-8').read()
     parts=re.split(r'^## Sheet name: (.*)$',txt,flags=re.M)
@@ -120,11 +141,16 @@ def main(src, html='index.html'):
     out={'ref':ref,'ugs':{k:v for k,v in SIGLAS.items() if k in set(df['UGR'])},'t':tabs,
          'cols':['ugr','gc','uo','acao','fonte','pi','nd','prov','dest','disp','aliq','emliq','liqpag','pago'],'rows':rows}
     blob=json.dumps(out,ensure_ascii=False,separators=(',',':'))
+    ne=gerar_ne(sheets,SIGLAS)
+    nblob=json.dumps(ne,ensure_ascii=False,separators=(',',':'))
     s=open(html,encoding='utf-8').read()
     novo=f'<script id="execData" type="application/json">{blob}</script>'
     if 'id="execData"' in s: s=re.sub(r'<script id="execData" type="application/json">.*?</script>',lambda m:novo,s,flags=re.S)
     else: s=s.replace('<script src="https://cdnjs.cloudflare.com',novo+'\n<script src="https://cdnjs.cloudflare.com',1)
+    nnovo=f'<script id="neData" type="application/json">{nblob}</script>'
+    if 'id="neData"' in s: s=re.sub(r'<script id="neData" type="application/json">.*?</script>',lambda m:nnovo,s,flags=re.S)
+    else: s=s.replace('<script src="https://cdnjs.cloudflare.com',nnovo+'\n<script src="https://cdnjs.cloudflare.com',1)
     open(html,'w',encoding='utf-8').write(s)
-    print(f'{len(rows)} linhas · {len(out["ugs"])} UGs · ref {ref} · {len(blob)/1024:.0f} KB')
+    print(f'{len(rows)} linhas · {len(out["ugs"])} UGs · ref {ref} · {len(blob)/1024:.0f} KB · {len(ne["rows"])} NEs únicas · {len(nblob)/1024:.0f} KB')
 
 if __name__=='__main__': main(sys.argv[1], *(sys.argv[2:3] or ['index.html']))
