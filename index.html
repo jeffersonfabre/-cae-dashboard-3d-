@@ -200,6 +200,7 @@
   #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#14223b;border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;max-width:min(560px,92vw);opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.45)}
   #toast.show{opacity:1;transform:translate(-50%,0)}#toast.ok{border-color:#22c38e}#toast.err{border-color:#ff6b6b}
   @media (max-width:720px){#panel{top:0;height:100%;border-radius:0;transform:translateY(14px)}#panel.open{transform:none}.chips .chip{display:none}#refreshBtn span{display:none}.nd-v{margin-left:0;text-align:left}}
+  .chart svg{max-height:340px}
 </style>
 </head>
 <body>
@@ -252,7 +253,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.13.1</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.14.0</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -1099,6 +1100,29 @@ function drawKpis(list){
   const k=document.getElementById('pKpis'); k.style.display=list&&list.length?'':'none';
   k.innerHTML=(list||[]).map(x=>`<div class="kpi"><div class="l">${x.l}</div><div class="v">${x.v}</div><div class="s">${x.s}</div></div>`).join('');
 }
+function exChart(set){ // por mês: valor empenhado (barras) + quantidade de NE (linha) das UGs filtradas
+  const all=neMonths(), m=new Map(all.map(k=>[k,{v:0,n:0}]));
+  for(const r of NE.rows){ if(!set.has(NE.t.ugr[r[2]])) continue; const o=m.get(r[0].slice(0,7)); o.v+=r[9]; o.n++; }
+  const maxV=Math.max(1,...[...m.values()].map(o=>o.v)), maxN=Math.max(1,...[...m.values()].map(o=>o.n));
+  const W=520,H=250,pl=10,pr=10,pt=30,pb=38,bw=(W-pl-pr)/all.length, hh=H-pt-pb;
+  const sh=v=>v>=1e6?(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':v>=1e3?Math.round(v/1e3)+' mil':v>0?Math.round(v)+'':'0';
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Valor empenhado e quantidade de NE por mês">`, pts=[];
+  all.forEach((k,i)=>{ const o=m.get(k), h=o.v/maxV*hh, x=pl+i*bw+bw*.16, w=bw*.68, cx=x+w/2, y=pt+hh-h, ny=pt+hh-o.n/maxN*hh;
+    svg+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(h,o.v>0?1.5:0).toFixed(1)}" rx="3" fill="var(--accent,#2f7bff)" opacity=".85"><title>${MES[+k.slice(5)-1]}/${k.slice(0,4)}: ${brl2(o.v)} · ${o.n} NE</title></rect>`+
+      `<text x="${cx.toFixed(1)}" y="${H-pb+14}" text-anchor="middle" font-size="11" fill="#8fa3c2">${MES[+k.slice(5)-1]}</text>`+
+      `<text x="${cx.toFixed(1)}" y="${H-pb+27}" text-anchor="middle" font-size="9.5" fill="#6b7f9f">${sh(o.v)}</text>`;
+    pts.push([cx,ny,o.n]); });
+  svg+=`<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="#ffc53d" stroke-width="2.5" stroke-linejoin="round"/>`+
+    pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4" fill="#ffc53d" stroke="#0b1424" stroke-width="1.5"/><text x="${p[0].toFixed(1)}" y="${(p[1]-9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="800" fill="#ffc53d">${p[2]}</text>`).join('');
+  return svg+'</svg><div class="lg" style="padding:4px 10px 8px"><span><b style="background:var(--accent,#2f7bff)"></b>Valor empenhado no mês (NE)</span><span><b style="background:#ffc53d"></b>Quantidade de NE (nº absoluto)</span></div>';
+}
+function exLinhas(rows){ // todas as linhas de crédito das UGs filtradas
+  const T=exSum(rows), cap=400, R=rows.slice().sort((a,b)=>(b[7]+b[8])-(a[7]+a[8])), c=v=>`<td style="text-align:right;white-space:nowrap">${brl(v)}</td>`;
+  return `<h3 style="margin-top:20px">Linhas de crédito <small class="sm">· ${rows.length.toLocaleString('pt-BR')} linha${rows.length===1?'':'s'}, da maior para a menor</small></h3><div class="tw"><table class="ne"><thead><tr><th>UG</th><th>Cmdo</th><th>Ação</th><th>Fonte</th><th>PI</th><th>ND</th><th style="text-align:right">Recebido</th><th style="text-align:right">Disponível</th><th style="text-align:right">Empenhado</th><th style="text-align:right">Liquidado</th><th style="text-align:right">Pago</th></tr></thead><tbody>`+
+    R.slice(0,cap).map(r=>{ const emp=r[10]+r[11]+r[12]+r[13];
+      return `<tr><td><b>${esc(sig(r[0]))}</b></td><td>${esc(EX.t.gc[r[1]])}</td><td class="ds">${esc(EX.t.acao[r[3]][0])}</td><td>${esc(EX.t.fonte[r[4]][0])}</td><td>${esc(EX.t.pi[r[5]][0])}</td><td>${esc(EX.t.nd[r[6]][0])}</td>${c(r[7]+r[8])}${c(r[9])}${c(emp)}${c(r[12]+r[13])}${c(r[13])}</tr>`; }).join('')+
+    `<tr class="tot"><td colspan="6">Total</td>${c(T.rec)}${c(T.disp)}${c(T.emp)}${c(T.liq)}${c(T.pago)}</tr></tbody></table></div>`+(rows.length>cap?`<p class="exn">Mostrando as ${cap} maiores linhas de ${rows.length}.</p>`:'');
+}
 function exRender(body){
   const set=ugMatch(exQ), rows=set?EX.rows.filter(r=>set.has(r[0])):EX.rows, T=exSum(rows);
   const ugs=exGroup(EX.rows,r=>r[0]);
@@ -1117,8 +1141,9 @@ function exRender(body){
   const gc=exGroup(rows,r=>r[1]).map(g=>({...g,n:EX.t.gc[g.k]}));
   h+=`<div class="cols2">`;
   if(!set||set.size>1) h+=tb('Por UG responsável (clique para filtrar)',exGroup(rows,r=>r[0]).slice(0,12),'UG',true);
-  h+=tb('Por natureza de despesa',nd.slice(0,8),'ND')+tb('Por plano interno (PI) · maiores',pi,'PI')+tb('Por Grande Comando',gc,'Cmdo')+`</div>`;
-  h+=`<div class="note">Fonte: aba “Execução” da planilha-banco do CAE (Tesouro Gerencial), posição até <b>${EX.ref}</b>. Valores em R$; “mi” = milhões, “bi” = bilhões. Digite a sigla da UG (ex.: HFAG) ou parte dela (ex.: HF).</div>`;
+  if(set) h+=`</div><h3 style="margin-top:20px">Por mês · valor empenhado e quantidade de NE</h3><div class="chart">${exChart(set)}</div>`+exLinhas(rows);
+  else h+=tb('Por natureza de despesa',nd.slice(0,8),'ND')+tb('Por plano interno (PI) · maiores',pi,'PI')+tb('Por Grande Comando',gc,'Cmdo')+`</div>`;
+  h+=`<div class="note">Fonte: aba “Execução” da planilha-banco do CAE (Tesouro Gerencial), posição até <b>${EX.ref}</b>. Valores em R$; “mi” = milhões, “bi” = bilhões. Digite a sigla da UG (ex.: HFAG) ou parte dela (ex.: HF). Com filtro, o gráfico mensal usa as NEs (aba NE): a aba Execução não traz data, então o crédito recebido não pode ser aberto por mês.</div>`;
   const hadFocus=document.activeElement&&document.activeElement.id==='exUG', pos=hadFocus?document.activeElement.selectionStart:0;
   body.innerHTML=h;
   const inp=body.querySelector('#exUG');
