@@ -69,12 +69,23 @@ const CAEData=(()=>{
     for(const r of t.data){ const m=t.get(r,'Mês Lançamento'); if(!/^[A-Za-zÀ-ú]{3}\/\d{4}$/.test(m)) continue; meses.push(m.toUpperCase()); rows.push([...ks.map(k=>r2(num(t.get(r,k)))),r2(num(t.get(r,'Total')))]); }
     return {meses,cmdos:ks,rows};
   }
-  function transformar(execCSV,neCSV,siglas,rpCSV){
+  function contratos(csv){ // aba "DC - Contratos Publicados" (ASSGOV): cabeçalho na linha de 'SITUAÇÃO' / 'Nº DO CONTRATO'
+    const all=parseCSV(csv), t=table(all,['SITUAÇÃO','Nº DO CONTRATO']);
+    let ref=''; for(const r of all.slice(0,8)){ const i=r.indexOf('ATUALIZADO EM'); if(i>=0){ ref=String(r[i+1]||'').trim(); break; } }
+    const G=['Nº DO CONTRATO','RECEITA/DESPESA','Nº DA COMPRA','MODALIDADE','PROCESSO','OBJETO','INFORMAÇÕES COMPLEMENTARES','CATEGORIA','FORNECEDOR','CNPJ/CPF'], V=['VALOR INICIAL','VALOR GLOBAL','VALOR ACUMULADO'];
+    const money=v=>v===''?null:r2(num(v)), rows=[];
+    for(const r of t.data){ const n=t.get(r,'Nº DO CONTRATO'); if(!n) continue;
+      rows.push([...G.map(k=>t.get(r,k)),isoDate(t.get(r,'ASSINATURA')),isoDate(t.get(r,'INÍCIO DA VIGÊNCIA')),isoDate(t.get(r,'FIM DA VIGÊNCIA')),
+        ...V.map(k=>money(t.get(r,k))),t.get(r,'Nº DE PARCELAS'),money(t.get(r,'VALOR DA PARCELA')),t.get(r,'UNIDADES REQUISITANTES'),t.get(r,'CONCILIAÇÃO DAS FONTES'),t.get(r,'Nº CONTROLE PNCP CONTRATO'),t.get(r,'ATUALIZAÇÃO DA FONTE')]); }
+    return {ref,cols:['num','tipo','compra','modal','proc','objeto','info','cat','forn','cnpj','assin','ini','fim','vini','vglob','vacum','parc','vparc','unid','concil','pncp','fonteAtual'],rows};
+  }
+  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV){
     const ne=notas(parseCSV(neCSV),siglas), ex=execucao(parseCSV(execCSV),siglas);
     ex.ref=ne.ref; Object.assign(ex.ugs,ne.ugs);
     let r=null; if(rpCSV){ try{ r=rp(rpCSV); if(!r.meses.length) r=null; }catch(e){ r=null; } }
-    return {ex,ne,rp:r};
+    let c=null; if(ctCSV){ try{ c=contratos(ctCSV); if(!c.rows.length) c=null; }catch(e){ c=null; } }
+    return {ex,ne,rp:r,ct:c};
   }
-  return {parseCSV,num,transformar,execucao,notas,rp};
+  return {parseCSV,num,transformar,execucao,notas,rp,contratos};
 })();
 /*/DATALIB*/
