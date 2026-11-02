@@ -259,7 +259,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.14.8</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.14.9</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -652,12 +652,13 @@ function ctDetail(i){
 // localizar por pregão: "90058/2026", "90058" ou só o final ("58"); vários separados por espaço
 function pregaoOk(num,q){ q=String(q||'').trim(); if(!q) return true; const n=String(num||'').trim(), np=n.split('/')[0].replace(/\D/g,''), ny=(n.split('/')[1]||'').replace(/\D/g,'');
   return q.split(/[\s,;]+/).filter(Boolean).some(t=>{ const [a,b]=t.split('/'), da=(a||'').replace(/\D/g,''), db=(b||'').replace(/\D/g,''); return np&&(!da||np===da||np.replace(/^0+/,'')===da.replace(/^0+/,'')||(da.length<np.length&&np.endsWith(da)))&&(!db||ny===db); }); }
+function lcAreaOk(a){ const q=ctNorm(lcF.area).trim(); if(!q) return true; const x=ctNorm(a); return x===q||x.includes(q); }
 const lcF={q:'',preg:'',st:'__ini',mod:'',area:'',sis:'',ag:'',lim:100};
 const LC_FIM=['HOMOLOGADO','REVOGADO','ARQUIVADO','TOD','SUSPENSO','EXECUÇÃO CONTRATUAL'];
 const lcCls = s => s==='HOMOLOGADO'||s==='EXECUÇÃO CONTRATUAL'?'ok':s==='NÃO INICIADO'?'mut':/REVOGADO|ARQUIVADO|SUSPENSO|TOD/.test(s)?'bad':'warn';
 const lcAndamento = s => s&&s!=='NÃO INICIADO'&&!LC_FIM.includes(s);
 function lcBase(){ const q=ctNorm(lcF.q).trim();
-  return LC.rows.filter(r=>pregaoOk(r[8],lcF.preg)&&(!lcF.mod||r[7]===lcF.mod)&&(!lcF.area||r[5]===lcF.area)&&(!lcF.sis||r[11]===lcF.sis)&&(!lcF.ag||r[25]===lcF.ag)&&
+  return LC.rows.filter(r=>pregaoOk(r[8],lcF.preg)&&(!lcF.mod||r[7]===lcF.mod)&&lcAreaOk(r[5])&&(!lcF.sis||r[11]===lcF.sis)&&(!lcF.ag||r[25]===lcF.ag)&&
     (!q||ctNorm([r[0],r[1],r[2],r[8],r[9],r[19],r[25],r[5]].join(' | ')).includes(q))); }
 const lcStOk = r => lcF.st==='__ini'?r[0]!=='NÃO INICIADO':!lcF.st||r[0]===lcF.st;
 function lcKpis(b){ const n=s=>b.filter(r=>r[0]===s).length, ini=b.filter(r=>r[0]!=='NÃO INICIADO'), v=ini.reduce((a,r)=>a+(r[21]||0),0);
@@ -683,11 +684,12 @@ function lcRender(body){
   const sel=(id,lab,list,cur,all)=>`<div class="exf"><label for="${id}">${lab}</label><select id="${id}"><option value="">${all}</option>${list.map(([v,t])=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
   body.innerHTML=`<div class="filters"><div class="exf"><label for="lcP">Nº do pregão</label><input id="lcP" type="search" inputmode="numeric" placeholder="ex.: 90058/2026 ou 90058" autocomplete="off" value="${esc(lcF.preg)}"></div><div class="exf"><label for="lcQ">Buscar</label><input id="lcQ" type="search" placeholder="Objeto, nº da contratação, DFD, PAG, agente…" autocomplete="off" value="${esc(lcF.q)}"></div>`+
     `<div class="exf"><label for="lcSt">Status</label><select id="lcSt"><option value="__ini"${lcF.st==='__ini'?' selected':''}>Iniciadas (exceto não iniciadas)</option><option value=""${lcF.st===''?' selected':''}>Todas (inclui não iniciadas)</option>${sts.map(([v,t])=>`<option value="${esc(v)}"${v===lcF.st?' selected':''}>${esc(t)}</option>`).join('')}</select></div>`+
-    sel('lcMod','Modalidade',opts(7),lcF.mod,'Todas')+sel('lcArea','Área requisitante',opts(5),lcF.area,'Todas')+sel('lcSis','Sistema',opts(11),lcF.sis,'Todos')+sel('lcAg','Agente',opts(25),lcF.ag,'Todos')+`</div><div id="lcOut"></div>`;
+    sel('lcMod','Modalidade',opts(7),lcF.mod,'Todas')+`<div class="exf"><label for="lcArea">Área requisitante</label><input id="lcArea" list="lcAreaDL" type="text" placeholder="Digite ou escolha (ex.: DIRSA)" autocomplete="off" spellcheck="false" value="${esc(lcF.area)}"><datalist id="lcAreaDL">${opts(5).map(([v])=>`<option value="${esc(v)}">`).join('')}</datalist></div>`+sel('lcSis','Sistema',opts(11),lcF.sis,'Todos')+sel('lcAg','Agente',opts(25),lcF.ag,'Todos')+`</div><div id="lcOut"></div>`;
   const upd=()=>{ lcF.lim=100; lcOut(); };
+  body.querySelector('#lcArea').oninput=e=>{ lcF.area=e.target.value; upd(); };
   body.querySelector('#lcQ').oninput=e=>{ lcF.q=e.target.value; upd(); };
   body.querySelector('#lcP').oninput=e=>{ lcF.preg=e.target.value; if(lcF.preg.trim()&&lcF.st==='__ini'){ lcF.st=''; body.querySelector('#lcSt').value=''; } upd(); };
-  [['lcSt','st'],['lcMod','mod'],['lcArea','area'],['lcSis','sis'],['lcAg','ag']].forEach(([id,k])=>body.querySelector('#'+id).onchange=e=>{ lcF[k]=e.target.value; upd(); });
+  [['lcSt','st'],['lcMod','mod'],['lcSis','sis'],['lcAg','ag']].forEach(([id,k])=>body.querySelector('#'+id).onchange=e=>{ lcF[k]=e.target.value; upd(); });
   lcOut();
 }
 function lcOut(){
