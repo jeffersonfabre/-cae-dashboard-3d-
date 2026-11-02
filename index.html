@@ -97,6 +97,8 @@
   .st.warn{background:rgba(255,197,61,.15);color:var(--yellow)}
   .st.bad{background:rgba(255,90,106,.15);color:var(--red)}
   .kpis.hq{padding:0;margin-top:8px;max-width:none}
+  .soon{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--yellow);background:rgba(255,197,61,.15);border-radius:6px;padding:2px 7px;margin-left:8px;vertical-align:middle}
+  .soonbox{max-width:560px;margin:40px auto;text-align:center;background:var(--panel2);border:1px dashed var(--line);border-radius:14px;padding:28px 24px}.soonbox b{display:block;font-size:20px;color:var(--yellow);margin-bottom:8px}.soonbox p{color:var(--muted);font-size:13.5px;line-height:1.5}
   .st.mut{background:rgba(143,163,194,.15);color:var(--muted)}
   .note{margin-top:16px;font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px dashed var(--line);padding:10px 12px;border-radius:10px}
   .credit{padding:10px 22px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
@@ -260,7 +262,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.15.0</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.15.1</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -990,7 +992,11 @@ function label(text, color, items=[]){
       g.font='500 34px Inter, sans-serif';
       items.forEach((it,i)=>{ const y=HEAD+8+i*LINE+LINE/2;
         g.fillStyle=color; g.beginPath(); g.arc(46,y,6,0,Math.PI*2); g.fill();
-        g.fillStyle='#dbe6f6'; g.fillText(it,68,y+1); });
+        const nm=typeof it==='string'?it:it.t, soon=typeof it!=='string'&&it.soon;
+        g.font='500 34px Inter, sans-serif'; g.fillStyle=soon?'#8fa3c2':'#dbe6f6'; g.fillText(nm,68,y+1);
+        if(soon){ const w0=g.measureText(nm).width; g.font='700 24px Inter, sans-serif'; const tx='EM BREVE', tw=g.measureText(tx).width;
+          g.fillStyle='rgba(255,197,61,.18)'; g.beginPath(); g.roundRect?g.roundRect(68+w0+14,y-17,tw+22,34,10):g.rect(68+w0+14,y-17,tw+22,34); g.fill();
+          g.fillStyle='#ffc53d'; g.fillText(tx,68+w0+25,y+1); g.font='500 34px Inter, sans-serif'; } });
     }
   });
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true,sizeAttenuation:false}));
@@ -1057,7 +1063,7 @@ function building(key,{w,h,d,color,accent,x,z,ry=0,floors=3,cols=8}){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.9,.12,12,40),new THREE.MeshBasicMaterial({color:new THREE.Color(accent)}));
   const top=key==='hq'?h+5.6:h+2.3; // no Comando, acima do frontão
   ring.rotation.x=Math.PI/2; ring.position.y=top; g.add(ring);
-  const topics=key==='hq'?[]:DATA[key].tabs.map(t=>t.t);
+  const topics=key==='hq'?[]:DATA[key].tabs.map(t=>({t:t.t,soon:!t.render&&!t.macro}));
   const lab=label(DATA[key].title.replace('Divisão de ','Divisão '),accent,topics); lab.position.y=top+.7; g.add(lab);
 
   g.userData={key,ring,band,baseY:top,lab};
@@ -1393,7 +1399,7 @@ function showMenu(){
   document.getElementById('pTitle').textContent=d.title;
   document.getElementById('pSub').textContent='Escolha um tópico (ou clique nele na lista sobre o prédio)';
   const k=document.getElementById('pKpis'); k.innerHTML=''; k.style.display='none'; curTab=null;
-  document.getElementById('pBody').innerHTML=`<div class="topics">`+d.tabs.map((t,i)=>`<button class="topic" data-i="${i}"><span>${t.t}</span><i>›</i></button>`).join('')+`</div>`;
+  document.getElementById('pBody').innerHTML=`<div class="topics">`+d.tabs.map((t,i)=>`<button class="topic" data-i="${i}"><span>${t.t}${(!t.render&&!t.macro)?' <em class="soon">em breve</em>':''}</span><i>›</i></button>`).join('')+`</div>`;
   document.querySelectorAll('#pBody .topic').forEach(b=>b.onclick=()=>showTab(+b.dataset.i));
 }
 function drawKpis(list){
@@ -1487,7 +1493,8 @@ function showTab(i){
   document.getElementById('pTitle').textContent=multi?t.t:d.title;
   const sub=document.getElementById('pSub');
   if(multi){ sub.innerHTML=`<button class="back" id="pBack">‹ ${d.title}</button>`; document.getElementById('pBack').onclick=showMenu; } else sub.textContent=d.sub;
-  if(!t.render&&!t.macro) drawKpis(t.kpis); else if(t.macro) drawKpis(d.kpis);
+  if(!t.render&&!t.macro){ drawKpis([]); document.getElementById('pBody').innerHTML=`<div class="soonbox"><b>Em breve</b><p>Este tópico ainda não tem banco de dados conectado. Assim que a planilha dele for ligada ao site, as informações aparecem aqui.</p></div>`; return; }
+  if(t.macro) drawKpis(d.kpis);
   if(t.render==='ne'){ neRender(document.getElementById('pBody')); return; }
   if(t.render==='lc'){ lcRender(document.getElementById('pBody')); return; }
   if(t.render==='ar'){ arRender(document.getElementById('pBody')); return; }
