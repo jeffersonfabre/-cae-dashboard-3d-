@@ -99,6 +99,9 @@
   .kpis.hq{padding:0;margin-top:8px;max-width:none}
   .soon{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--yellow);background:rgba(255,197,61,.15);border-radius:6px;padding:2px 7px;margin-left:8px;vertical-align:middle}
   .soonbox{max-width:560px;margin:40px auto;text-align:center;background:var(--panel2);border:1px dashed var(--line);border-radius:14px;padding:28px 24px}.soonbox b{display:block;font-size:20px;color:var(--yellow);margin-bottom:8px}.soonbox p{color:var(--muted);font-size:13.5px;line-height:1.5}
+  .hq-div{margin-bottom:30px}.hq-div .dv{font-size:18px;font-weight:800;padding:8px 14px;border-left:5px solid var(--dv);background:linear-gradient(90deg,color-mix(in srgb,var(--dv) 16%,transparent),transparent);border-radius:4px;margin-bottom:14px}
+  .hq-topic{margin:0 0 18px 6px}.hq-topic h4.tp{font-size:14px;font-weight:700;color:var(--text);margin:0 0 8px;cursor:pointer;display:flex;align-items:center;gap:10px}.hq-topic h4.tp span{font-size:11.5px;color:var(--dv);font-weight:700}.hq-topic h4.tp:hover span{text-decoration:underline}.hq-topic h4.tp.off{cursor:default;color:var(--muted)}
+  .hq-topic h5.sub{font-size:12px;color:var(--muted);font-weight:600;margin:12px 0 8px}
   .st.mut{background:rgba(143,163,194,.15);color:var(--muted)}
   .note{margin-top:16px;font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px dashed var(--line);padding:10px 12px;border-radius:10px}
   .credit{padding:10px 22px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
@@ -262,7 +265,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.15.1</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.15.2</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -1468,33 +1471,37 @@ function macroRender0(body){
     `<div class="lg">`+seg.map(([n,v,c])=>`<span><b style="background:${c}"></b>${n} <em>${pf(pct(v,T.rec))}</em></span>`).join('')+`</div>`+
     `<div class="note">Posição até <b>${EX.ref}</b>. Os grandes números das divisões estão acima; clique em um cartão para abrir o tópico.</div>`;
 }
-function hqSections(){
-  const S=[], f=(l,v,s,key,tab)=>({l,v,s,key,tab});
-  if(CT){ const v=ctVig(), n30=v.filter(r=>{ const d=ctDias(r[12]); return d!==null&&d<=30; }).length;
-    S.push(['Divisão de Contrato','contrato',[f('Contratos vigentes',v.length.toLocaleString('pt-BR'),mi(v.reduce((a,r)=>a+(r[14]||0),0))+' em valor global','contrato',0),f('Contratos que vencem em 30 dias',String(n30),'Atenção à prorrogação','contrato',0),
-      ...(RP?[f('Restos a pagar',mi(RP.rows[RP.rows.length-1][RP.cmdos.length]),'Saldo em '+RP.meses[RP.rows.length-1],'contrato',2)]:[]),
-      f('Notas de empenho',NE.rows.length.toLocaleString('pt-BR'),mi(NE.rows.reduce((a,r)=>a+r[9],0))+' empenhados','contrato',3),f('Execução orçamentária',pf(pct(EXALL.emp,EXALL.rec)),mi(EXALL.emp)+' empenhados de '+mi(EXALL.rec),'contrato',1)]]); }
-  const ob=[]; if(LC){ ob.push(f('Licitações em andamento',String(LC.rows.filter(r=>lcAndamento(r[0])).length),LC.rows.filter(r=>r[0]==='HOMOLOGADO').length+' homologadas','obtencao',0),
-      f('Valor estimado das licitações',mi(LC.rows.filter(r=>r[0]!=='NÃO INICIADO').reduce((a,r)=>a+(r[21]||0),0)),LC.rows.filter(r=>r[0]!=='NÃO INICIADO').length+' contratações iniciadas','obtencao',0),
-      f('Contratações a iniciar',String(LC.rows.filter(r=>r[0]==='NÃO INICIADO').length),'Previstas no PCA','obtencao',0)); }
-  if(AR){ const v=arVig(), n30=v.filter(r=>{ const d=ctDias(r[8]); return d!==null&&d<=30; }).length;
-    ob.push(f('Atas SRP vigentes',v.length.toLocaleString('pt-BR'),mi(v.reduce((a,r)=>a+(r[9]||0),0))+' registrados','obtencao',1),f('Atas que vencem em 30 dias',String(n30),'Renovar ou licitar','obtencao',1)); }
-  if(ob.length) S.push(['Divisão de Obtenção','obtencao',ob]);
-  return S;
+function hqRender(body){
+  const T=EXALL, card=(x,k,t)=>`<div class="kpi" data-k="${k}" data-t="${t}"><div class="l">${esc(x.l)}</div><div class="v">${esc(x.v)}</div><div class="s">${esc(x.s)}</div></div>`;
+  const topic=(k,t,title,list,extra='')=>`<div class="hq-topic"><h4 class="tp" data-k="${k}" data-t="${t}">${esc(title)} <span>abrir ›</span></h4>${list&&list.length?`<div class="kpis hq">${list.map(x=>card(x,k,t)).join('')}</div>`:''}${extra}</div>`;
+  const soon=(title)=>`<div class="hq-topic"><h4 class="tp off">${esc(title)} <em class="soon">em breve</em></h4></div>`;
+  const div=(k,title,inner)=>`<section class="hq-div" style="--dv:${DATA[k].color}"><h2 class="dv">${esc(title)}</h2>${inner}</section>`;
+  const seg=[['Pago',T.pago,'#ff8a1f'],['Liquidado a pagar',T.liqpag,'#ffc53d'],['Em liquidação',T.emliq,'#a66bff'],['A liquidar',T.aliq,'#22c38e'],['Disponível',T.disp,'#8fa3c2']];
+  const stack=`<div class="stack">`+seg.map(([n,v,c])=>`<i style="width:${pct(v,T.rec)}%;background:${c}" title="${n}: ${mi(v)}"></i>`).join('')+`</div><div class="lg">`+seg.map(([n,v,c])=>`<span><b style="background:${c}"></b>${n} <em>${pf(pct(v,T.rec))}</em></span>`).join('')+`</div>`;
+  const exK=[{l:'Crédito recebido',v:mi(T.rec),s:'Provisão + destaque'},{l:'Empenhado',v:pf(pct(T.emp,T.rec)),s:mi(T.emp)},{l:'Liquidado',v:pf(pct(T.liq,T.rec)),s:mi(T.liq)},{l:'Pago',v:pf(pct(T.pago,T.rec)),s:mi(T.pago)},{l:'Saldo disponível',v:mi(T.disp),s:pf(pct(T.disp,T.rec))+' do recebido'},{l:'UGs atendidas',v:String(Object.keys(EX.ugs).length),s:'Unidades responsáveis'}];
+  const g0=rpF.gc; rpF.gc='';
+  let h=div('contrato','Divisão de Contrato',
+    topic('contrato',0,'Contratos',CT?ctKpis(CT.rows):null)+
+    topic('contrato',1,'Execução Orçamentária',exK,`<h5 class="sub">Para onde foi o crédito recebido</h5>${stack}`)+
+    topic('contrato',2,'Restos a Pagar',RP?rpKpis():null)+
+    topic('contrato',3,'Nota de Empenho',neKpis(NE.rows)));
+  rpF.gc=g0;
+  h+=div('obtencao','Divisão de Obtenção',
+    topic('obtencao',0,'Controle Licitações',LC?lcKpis(LC.rows):null)+
+    topic('obtencao',1,'Atas SRP',AR?arKpis(AR.rows):null));
+  h+=div('adm','Divisão Administrativa',DATA.adm.tabs.map(t=>(t.render||t.macro)?'':soon(t.t)).join(''));
+  h+=`<div class="note">Posição da execução até <b>${EX.ref}</b>. Clique em um cartão ou no nome do tópico para abrir os detalhes.</div>`;
+  body.innerHTML=h;
+  body.querySelectorAll('[data-k]').forEach(c=>c.onclick=()=>openDivision(c.dataset.k,+c.dataset.t));
 }
-function macroRender(body){
-  macroRender0(body);
-  const h=hqSections().map(([t,key,items])=>`<h3 style="margin-top:22px">${t} <small class="sm">· clique para abrir</small></h3><div class="kpis hq">${items.map(x=>`<div class="kpi" data-k="${x.key}" data-t="${x.tab}"><div class="l">${esc(x.l)}</div><div class="v">${esc(x.v)}</div><div class="s">${esc(x.s)}</div></div>`).join('')}</div>`).join('');
-  const note=body.querySelector('.note'); if(note) note.insertAdjacentHTML('beforebegin',h); else body.insertAdjacentHTML('beforeend',h);
-  body.querySelectorAll('.kpi[data-k]').forEach(c=>c.onclick=()=>openDivision(c.dataset.k,+c.dataset.t));
-}
+function macroRender(body){ hqRender(body); }
 function showTab(i){
   const d=DATA[selected], t=d.tabs[i], multi=d.tabs.length>1; curTab=i;
   document.getElementById('pTitle').textContent=multi?t.t:d.title;
   const sub=document.getElementById('pSub');
   if(multi){ sub.innerHTML=`<button class="back" id="pBack">‹ ${d.title}</button>`; document.getElementById('pBack').onclick=showMenu; } else sub.textContent=d.sub;
   if(!t.render&&!t.macro){ drawKpis([]); document.getElementById('pBody').innerHTML=`<div class="soonbox"><b>Em breve</b><p>Este tópico ainda não tem banco de dados conectado. Assim que a planilha dele for ligada ao site, as informações aparecem aqui.</p></div>`; return; }
-  if(t.macro) drawKpis(d.kpis);
+  if(t.macro) drawKpis([]);
   if(t.render==='ne'){ neRender(document.getElementById('pBody')); return; }
   if(t.render==='lc'){ lcRender(document.getElementById('pBody')); return; }
   if(t.render==='ar'){ arRender(document.getElementById('pBody')); return; }
