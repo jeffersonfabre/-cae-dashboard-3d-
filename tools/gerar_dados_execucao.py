@@ -98,7 +98,8 @@ def gerar_ne(sheets, siglas):
     d=pd.read_csv(io.StringIO('\n'.join(L)),dtype=str,keep_default_na=False)
     d=d.drop_duplicates('NE',keep='first').copy()          # a mesma NE nunca entra duas vezes
     d['v']=d['Valor a NE'].map(num)
-    faltam=sorted(set(d['UGR'])-set(siglas)); assert not faltam, f'UGR sem sigla na aba NE: {faltam}'
+    for c in sorted(set(d['UGR'])-set(siglas)):
+        siglas[c]=(c,c); print(f'AVISO: UGR {c} sem sigla cadastrada — usando o código')
     tabs={k:[] for k in ('ugr','gc','ptres','fonte','pi','nd')}
     def idx(k,v):
         t=tabs[k]
@@ -122,7 +123,8 @@ def main(src, html='index.html'):
     chk=(df['Crédito Disponível']+df['Crédito Empenhado a Liquidar']+df['Crédito Empenhado em Liquidação']
          +df['Crédito Empenhado Liquidado a Pagar']+df['Crédito Empenhado Liquidado Pago']-rec).abs()
     assert (chk<0.02).all(), 'Linhas em que as colunas não fecham com o crédito recebido'
-    faltam=sorted(set(df['UGR'])-set(SIGLAS)); assert not faltam, f'UGR sem sigla: {faltam}'
+    for c in sorted(set(df['UGR'])-set(SIGLAS)):
+        SIGLAS[c]=(c,c); print(f'AVISO: UGR {c} sem sigla cadastrada — usando o código (complete SIGLAS em tools/gerar_dados_execucao.py)')
     tabs={k:[] for k in ('gc','uo','acao','fonte','pi','nd')}
     def idx(k,v):
         t=tabs[k]
