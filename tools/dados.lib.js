@@ -63,11 +63,18 @@ const CAEData=(()=>{
     return {ref:mx?mx.slice(8)+'/'+mx.slice(5,7)+'/'+mx.slice(0,4):'',ugs,t:dd,
       cols:['data','ne','ugr','gc','ptres','fonte','pi','nd','desc','valor','esfera','acao','po','forn','amparo','proc','lic','linhas'],rows:out};
   }
-  function transformar(execCSV,neCSV,siglas){
+  function rp(csv){ // aba "RP Mensal Grd Cmdo": linhas = mês de lançamento, colunas = Grande Comando
+    const t=table(parseCSV(csv),['Mês Lançamento','Total']), ks=Object.keys(t.cols).filter(k=>k&&k!=='Mês Lançamento'&&k!=='Total');
+    const meses=[], rows=[];
+    for(const r of t.data){ const m=t.get(r,'Mês Lançamento'); if(!/^[A-Za-zÀ-ú]{3}\/\d{4}$/.test(m)) continue; meses.push(m.toUpperCase()); rows.push([...ks.map(k=>r2(num(t.get(r,k)))),r2(num(t.get(r,'Total')))]); }
+    return {meses,cmdos:ks,rows};
+  }
+  function transformar(execCSV,neCSV,siglas,rpCSV){
     const ne=notas(parseCSV(neCSV),siglas), ex=execucao(parseCSV(execCSV),siglas);
     ex.ref=ne.ref; Object.assign(ex.ugs,ne.ugs);
-    return {ex,ne};
+    let r=null; if(rpCSV){ try{ r=rp(rpCSV); if(!r.meses.length) r=null; }catch(e){ r=null; } }
+    return {ex,ne,rp:r};
   }
-  return {parseCSV,num,transformar,execucao,notas};
+  return {parseCSV,num,transformar,execucao,notas,rp};
 })();
 /*/DATALIB*/
