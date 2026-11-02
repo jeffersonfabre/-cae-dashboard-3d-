@@ -1,0 +1,49 @@
+name: Atualizar dados da planilha
+
+on:
+  schedule:
+    - cron: '56 9 * * 1-5'   # 06:56 em Brasília (UTC-3), de segunda a sexta
+  workflow_dispatch:         # botão "Run workflow" para rodar na hora
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-dados
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: pip install pandas google-auth requests
+
+      - name: Ler a planilha (API do Google Sheets)
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID || '1XYsCO3YrBFPov2aEXlQp36mgX9D86kMvtUA0M3AfUAA' }}
+        run: python3 tools/ler_sheets_api.py "$RUNNER_TEMP/blocos"
+
+      - name: Regenerar os dados do site
+        id: gerar
+        run: |
+          python3 tools/atualizar_do_sheets.py "$RUNNER_TEMP/blocos" index.html | tee "$RUNNER_TEMP/saida.txt"
+          if grep -q '^MUDOU' "$RUNNER_TEMP/saida.txt"; then echo "mudou=true" >> "$GITHUB_OUTPUT"; fi
+          grep '^AVISO' "$RUNNER_TEMP/saida.txt" || true
+
+      - name: Publicar (commit + push; a Vercel faz o deploy)
+        if: steps.gerar.outputs.mudou == 'true'
+        run: |
+          git config user.name "jeffersonfabre"
+          git config user.email "jeffersonfabre@gmail.com"
+          git add index.html sw.js README.md
+          VER=$(grep -o '<span>v[0-9.]*</span>' index.html | head -1 | sed 's/<[^>]*>//g')
+          git commit -m "dados: atualização automática da planilha ($VER)"
+          git push
