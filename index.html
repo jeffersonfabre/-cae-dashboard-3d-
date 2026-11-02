@@ -259,7 +259,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.14.7</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.14.8</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -649,12 +649,15 @@ function ctDetail(i){
 }
 
 /* ---------- Controle de Licitações (aba "DO - Gerencial") ---------- */
-const lcF={q:'',st:'__ini',mod:'',area:'',sis:'',ag:'',lim:100};
+// localizar por pregão: "90058/2026", "90058" ou só o final ("58"); vários separados por espaço
+function pregaoOk(num,q){ q=String(q||'').trim(); if(!q) return true; const n=String(num||'').trim(), np=n.split('/')[0].replace(/\D/g,''), ny=(n.split('/')[1]||'').replace(/\D/g,'');
+  return q.split(/[\s,;]+/).filter(Boolean).some(t=>{ const [a,b]=t.split('/'), da=(a||'').replace(/\D/g,''), db=(b||'').replace(/\D/g,''); return np&&(!da||np===da||np.replace(/^0+/,'')===da.replace(/^0+/,'')||(da.length<np.length&&np.endsWith(da)))&&(!db||ny===db); }); }
+const lcF={q:'',preg:'',st:'__ini',mod:'',area:'',sis:'',ag:'',lim:100};
 const LC_FIM=['HOMOLOGADO','REVOGADO','ARQUIVADO','TOD','SUSPENSO','EXECUÇÃO CONTRATUAL'];
 const lcCls = s => s==='HOMOLOGADO'||s==='EXECUÇÃO CONTRATUAL'?'ok':s==='NÃO INICIADO'?'mut':/REVOGADO|ARQUIVADO|SUSPENSO|TOD/.test(s)?'bad':'warn';
 const lcAndamento = s => s&&s!=='NÃO INICIADO'&&!LC_FIM.includes(s);
 function lcBase(){ const q=ctNorm(lcF.q).trim();
-  return LC.rows.filter(r=>(!lcF.mod||r[7]===lcF.mod)&&(!lcF.area||r[5]===lcF.area)&&(!lcF.sis||r[11]===lcF.sis)&&(!lcF.ag||r[25]===lcF.ag)&&
+  return LC.rows.filter(r=>pregaoOk(r[8],lcF.preg)&&(!lcF.mod||r[7]===lcF.mod)&&(!lcF.area||r[5]===lcF.area)&&(!lcF.sis||r[11]===lcF.sis)&&(!lcF.ag||r[25]===lcF.ag)&&
     (!q||ctNorm([r[0],r[1],r[2],r[8],r[9],r[19],r[25],r[5]].join(' | ')).includes(q))); }
 const lcStOk = r => lcF.st==='__ini'?r[0]!=='NÃO INICIADO':!lcF.st||r[0]===lcF.st;
 function lcKpis(b){ const n=s=>b.filter(r=>r[0]===s).length, ini=b.filter(r=>r[0]!=='NÃO INICIADO'), v=ini.reduce((a,r)=>a+(r[21]||0),0);
@@ -678,11 +681,12 @@ function lcRender(body){
   const opts=i=>[...new Set(LC.rows.map(r=>r[i]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(x=>[x,x]);
   const sts=[...new Set(LC.rows.map(r=>r[0]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(x=>[x,x]);
   const sel=(id,lab,list,cur,all)=>`<div class="exf"><label for="${id}">${lab}</label><select id="${id}"><option value="">${all}</option>${list.map(([v,t])=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
-  body.innerHTML=`<div class="filters"><div class="exf"><label for="lcQ">Buscar</label><input id="lcQ" type="search" placeholder="Objeto, nº da contratação, DFD, PAG, agente…" autocomplete="off" value="${esc(lcF.q)}"></div>`+
+  body.innerHTML=`<div class="filters"><div class="exf"><label for="lcP">Nº do pregão</label><input id="lcP" type="search" inputmode="numeric" placeholder="ex.: 90058/2026 ou 90058" autocomplete="off" value="${esc(lcF.preg)}"></div><div class="exf"><label for="lcQ">Buscar</label><input id="lcQ" type="search" placeholder="Objeto, nº da contratação, DFD, PAG, agente…" autocomplete="off" value="${esc(lcF.q)}"></div>`+
     `<div class="exf"><label for="lcSt">Status</label><select id="lcSt"><option value="__ini"${lcF.st==='__ini'?' selected':''}>Iniciadas (exceto não iniciadas)</option><option value=""${lcF.st===''?' selected':''}>Todas (inclui não iniciadas)</option>${sts.map(([v,t])=>`<option value="${esc(v)}"${v===lcF.st?' selected':''}>${esc(t)}</option>`).join('')}</select></div>`+
     sel('lcMod','Modalidade',opts(7),lcF.mod,'Todas')+sel('lcArea','Área requisitante',opts(5),lcF.area,'Todas')+sel('lcSis','Sistema',opts(11),lcF.sis,'Todos')+sel('lcAg','Agente',opts(25),lcF.ag,'Todos')+`</div><div id="lcOut"></div>`;
   const upd=()=>{ lcF.lim=100; lcOut(); };
   body.querySelector('#lcQ').oninput=e=>{ lcF.q=e.target.value; upd(); };
+  body.querySelector('#lcP').oninput=e=>{ lcF.preg=e.target.value; if(lcF.preg.trim()&&lcF.st==='__ini'){ lcF.st=''; body.querySelector('#lcSt').value=''; } upd(); };
   [['lcSt','st'],['lcMod','mod'],['lcArea','area'],['lcSis','sis'],['lcAg','ag']].forEach(([id,k])=>body.querySelector('#'+id).onchange=e=>{ lcF[k]=e.target.value; upd(); });
   lcOut();
 }
@@ -727,10 +731,10 @@ function lcDetail(i){
 }
 
 /* ---------- Atas SRP (aba "DO - ARP") ---------- */
-const arF={q:'',sit:'',lim:100};
+const arF={q:'',preg:'',sit:'',lim:100};
 const arVig = () => AR.rows.filter(r=>{ const d=ctDias(r[8]); return d===null||d>=0; });
 function arFiltered(){ const q=ctNorm(arF.q).trim();
-  return AR.rows.filter(r=>{ if(arF.sit&&ctFaixa(ctDias(r[8]))!==arF.sit) return false;
+  return AR.rows.filter(r=>{ if(!pregaoOk(r[1],arF.preg)) return false; if(arF.sit&&ctFaixa(ctDias(r[8]))!==arF.sit) return false;
     return !q||ctNorm([r[0],r[1],r[2],r[3],r[4],r[11],r[15],r[16]].join(' | ')).includes(q); }); }
 function arKpis(rows){ const v=rows.filter(r=>{ const d=ctDias(r[8]); return d===null||d>=0; });
   const n30=v.filter(r=>{ const d=ctDias(r[8]); return d!==null&&d<=30; }).length, n90=v.filter(r=>{ const d=ctDias(r[8]); return d!==null&&d<=90; }).length;
@@ -752,8 +756,9 @@ function arChart(rows){
 }
 function arRender(body){
   if(!AR){ body.innerHTML='<p class="exn">Aba “DO - ARP” não encontrada ou vazia na planilha-banco.</p>'; drawKpis([]); return; }
-  body.innerHTML=`<div class="filters"><div class="exf"><label for="arQ">Buscar</label><input id="arQ" type="search" placeholder="Nº da ata, pregão, fornecedor, objeto, item, CNPJ…" autocomplete="off" value="${esc(arF.q)}"></div>`+
+  body.innerHTML=`<div class="filters"><div class="exf"><label for="arP">Nº do pregão</label><input id="arP" type="search" inputmode="numeric" placeholder="ex.: 90085/2025 ou 90085" autocomplete="off" value="${esc(arF.preg)}"></div><div class="exf"><label for="arQ">Buscar</label><input id="arQ" type="search" placeholder="Nº da ata, pregão, fornecedor, objeto, item, CNPJ…" autocomplete="off" value="${esc(arF.q)}"></div>`+
     `<div class="exf"><label for="arSit">Situação</label><select id="arSit"><option value="">Todas</option>${Object.entries(ctFaixas).map(([k,t])=>`<option value="${k}"${k===arF.sit?' selected':''}>${t}</option>`).join('')}</select></div></div><div id="arOut"></div>`;
+  body.querySelector('#arP').oninput=e=>{ arF.preg=e.target.value; arF.lim=100; arOut(); };
   body.querySelector('#arQ').oninput=e=>{ arF.q=e.target.value; arF.lim=100; arOut(); };
   body.querySelector('#arSit').onchange=e=>{ arF.sit=e.target.value; arF.lim=100; arOut(); };
   arOut();
