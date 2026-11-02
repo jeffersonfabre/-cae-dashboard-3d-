@@ -1,49 +1,36 @@
-name: Atualizar dados da planilha
+name: Atualizar snapshot de reserva
 
+# O site lê a planilha-banco ao vivo (botão "Atualizar" + leitura automática).
+# Este fluxo é só MANUAL: regrava no index.html a cópia de reserva dos dados
+# (usada se o Google estiver fora do ar) e publica uma nova versão.
 on:
-  schedule:
-    - cron: '56 9 * * 1-5'   # 06:56 em Brasília (UTC-3), de segunda a sexta
-  workflow_dispatch:         # botão "Run workflow" para rodar na hora
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: atualizar-dados
+  group: atualizar-snapshot
   cancel-in-progress: false
 
 jobs:
-  atualizar:
+  snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
-
-      - name: Instalar dependências
-        run: pip install pandas google-auth requests
-
-      - name: Ler a planilha-banco (BD Site Dashboad CAE)
-        env:
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID || '19Za-0_spkX6aiCL0e8h-pTljgTLzwSAb8GwBmXxEy3g' }}
-        run: python3 tools/ler_sheets_api.py "$RUNNER_TEMP/blocos"
-
-      - name: Regenerar os dados do site
+          node-version: '20'
+      - name: Ler a planilha pública e regenerar o snapshot
         id: gerar
         run: |
-          python3 tools/atualizar_do_sheets.py "$RUNNER_TEMP/blocos" index.html | tee "$RUNNER_TEMP/saida.txt"
+          node tools/gerar_snapshot.mjs --fetch --bump | tee "$RUNNER_TEMP/saida.txt"
           if grep -q '^MUDOU' "$RUNNER_TEMP/saida.txt"; then echo "mudou=true" >> "$GITHUB_OUTPUT"; fi
-          grep '^AVISO' "$RUNNER_TEMP/saida.txt" || true
-
-      - name: Publicar (commit + push; a Vercel faz o deploy)
+      - name: Publicar
         if: steps.gerar.outputs.mudou == 'true'
         run: |
           git config user.name "jeffersonfabre"
           git config user.email "jeffersonfabre@gmail.com"
           git add index.html sw.js README.md
-          VER=$(grep -o '<span>v[0-9.]*</span>' index.html | head -1 | sed 's/<[^>]*>//g')
-          git commit -m "dados: atualização automática da planilha ($VER)"
+          git commit -m "Atualiza snapshot de reserva da planilha-banco"
           git push
