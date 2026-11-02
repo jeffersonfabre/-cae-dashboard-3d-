@@ -88,14 +88,22 @@ const CAEData=(()=>{
         money(g('VALOR TOTAL REGISTRADO')),g('QUANTIDADE DE ITENS'),g('ITENS CONTEMPLADOS'),g('Nº CONTROLE PNCP ATA'),g('DATA DA PUBLICAÇÃO NO PNCP'),g('ID COMPRA'),g('AGENTE DE CONTRATAÇÃO'),g('ITENS RESUMIDOS'),g('PAG'),g('UNIDADE APOIADA'),g('SITUAÇÃO DO ENRIQUECIMENTO')]); }
     return {ref,cols:['ata','pregao','objeto','forn','cnpj','divulg','assin','ini','fim','valor','qtd','itens','pncpAta','pubPncp','idCompra','agente','resumo','pag','unidade','enriq'],rows};
   }
-  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV,arCSV){
+  function gerencial(csv){ // aba "DO - Gerencial": 1 linha por contratação do PCA / certame (cabeçalho na linha com STATUS e DFD)
+    const all=parseCSV(csv), h=all.findIndex(r=>r.includes('STATUS')&&r.includes('DFD')); if(h<0) throw new Error('Cabeçalho não encontrado');
+    const c0=all[h].indexOf('STATUS'), D=i=>isoDate(i), money=v=>String(v||'').trim()===''?null:r2(num(v)), int=v=>String(v||'').trim()===''?null:Math.round(num(v)), rows=[];
+    for(const r of all.slice(h+1)){ const x=Array.from({length:34},(_,i)=>String(r[c0+i]==null?'':r[c0+i]).trim()); if(!x[0]&&!x[1]&&!x[9]) continue;
+      rows.push([x[0],x[1],x[2],D(x[3]),D(x[4]),x[5],x[6],x[7],x[8],x[9],x[10],x[11],x[12],x[13],x[14],D(x[15]),D(x[16]),D(x[17]),int(x[18]),x[19],D(x[20]),money(x[21]),D(x[22]),D(x[23]),D(x[24]),x[25],int(x[26]),int(x[27]),int(x[28]),int(x[29]),int(x[30]),x[31],D(x[32]),x[33]]); }
+    return {ref:'',cols:['status','dfd','idpca','pcaIni','pcaFim','area','anoPca','modal','nContr','objeto','natureza','sistema','complex','secao','demanda','ini','fim','chegada','qtd','pag','dataPag','valor','juridica','publ','abertura','agente','revog','desert','fracass','andam','homol','pctHomol','primArp','dfdVig'],rows};
+  }
+  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV,arCSV,lcCSV){
     const ne=notas(parseCSV(neCSV),siglas), ex=execucao(parseCSV(execCSV),siglas);
     ex.ref=ne.ref; Object.assign(ex.ugs,ne.ugs);
     let r=null; if(rpCSV){ try{ r=rp(rpCSV); if(!r.meses.length) r=null; }catch(e){ r=null; } }
     let c=null; if(ctCSV){ try{ c=contratos(ctCSV); if(!c.rows.length) c=null; }catch(e){ c=null; } }
     let a=null; if(arCSV){ try{ a=atas(arCSV); if(!a.rows.length) a=null; }catch(e){ a=null; } }
-    return {ex,ne,rp:r,ct:c,ar:a};
+    let l=null; if(lcCSV){ try{ l=gerencial(lcCSV); if(!l.rows.length) l=null; }catch(e){ l=null; } }
+    return {ex,ne,rp:r,ct:c,ar:a,lc:l};
   }
-  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas};
+  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas,gerencial};
 })();
 /*/DATALIB*/
