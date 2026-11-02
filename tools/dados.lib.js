@@ -31,15 +31,15 @@ const CAEData=(()=>{
   const VALS=['Provisão Recebida','Destaque Recebido','Crédito Disponível','Crédito Empenhado a Liquidar','Crédito Empenhado em Liquidação','Crédito Empenhado Liquidado a Pagar','Crédito Empenhado Liquidado Pago'];
   function execucao(rows,siglas){
     const t=table(rows,['Grande Cmdo','UGR','Provisão Recebida','Crédito Disponível']), g=t.get;
-    const D={gc:dict(),uo:dict(),acao:dict(),fonte:dict(),pi:dict(),nd:dict()}, ndNome={}, out=[], nomes={};
+    const D={gc:dict(),uo:dict(),acao:dict(),fonte:dict(),pi:dict(),nd:dict(),po:dict()}, ndNome={}, out=[], nomes={};
     for(const r of t.data){ const ugr=g(r,'UGR'); if(!ugr) continue; nomes[ugr]=nomes[ugr]||g(r,'UGR-Nome');
       const nd=g(r,'ND'); if(!(nd in ndNome)) ndNome[nd]=g(r,'ND-Nome').replace('TERCEIROS- ','TERCEIROS - ');
       out.push([ugr,D.gc.idx(g(r,'Grande Cmdo')),D.uo.idx([g(r,'Unidade Orçamentária'),g(r,'Unidade Orçamentária-Nome')]),
         D.acao.idx([g(r,'Ação Governo'),g(r,'Ação Governo-Nome')]),D.fonte.idx([g(r,'Fonte'),g(r,'Fonte-Nome')]),
-        D.pi.idx([g(r,'PI'),g(r,'PI-Nome')]),D.nd.idx([nd,ndNome[nd]]),...VALS.map(v=>r2(num(g(r,v)))),g(r,'PTRES')]); }
+        D.pi.idx([g(r,'PI'),g(r,'PI-Nome')]),D.nd.idx([nd,ndNome[nd]]),...VALS.map(v=>r2(num(g(r,v)))),g(r,'PTRES'),D.po.idx([g(r,'PO'),g(r,'Plano Orçamentário-Nome')])]); }
     const ugs={}; for(const r of out) if(!ugs[r[0]]) ugs[r[0]]=siglas[r[0]]||[r[0],nomes[r[0]]||r[0]];
-    return {ugs,t:{gc:D.gc.list,uo:D.uo.list,acao:D.acao.list,fonte:D.fonte.list,pi:D.pi.list,nd:D.nd.list},
-      cols:['ugr','gc','uo','acao','fonte','pi','nd','prov','dest','disp','aliq','emliq','liqpag','pago','ptres'],rows:out};
+    return {ugs,t:{gc:D.gc.list,uo:D.uo.list,acao:D.acao.list,fonte:D.fonte.list,pi:D.pi.list,nd:D.nd.list,po:D.po.list},
+      cols:['ugr','gc','uo','acao','fonte','pi','nd','prov','dest','disp','aliq','emliq','liqpag','pago','ptres','po'],rows:out};
   }
   function notas(rows,siglas){
     const t=table(rows,['Data','NE','UGR','Valor a NE']), g=t.get;
