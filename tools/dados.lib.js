@@ -46,7 +46,7 @@ const CAEData=(()=>{
     const porNE=new Map();
     for(const r of t.data){ const ne=g(r,'NE'); if(!ne) continue;
       let o=porNE.get(ne); if(!o){ o={r,linhas:[]}; porNE.set(ne,o); }
-      o.linhas.push([r2(num(g(r,'Empenho a Liquidar'))),r2(num(g(r,'Empenho em Liquidação'))),r2(num(g(r,'Empenho Liquidado a Pagar'))),r2(num(g(r,'Empenho Liquidado Pago')))]); }
+      o.linhas.push([r2(num(g(r,'Valor a NE'))),r2(num(g(r,'Empenho a Liquidar'))),r2(num(g(r,'Empenho em Liquidação'))),r2(num(g(r,'Empenho Liquidado a Pagar'))),r2(num(g(r,'Empenho Liquidado Pago')))]); }
     const D={ugr:dict(),gc:dict(),ptres:dict(),fonte:dict(),pi:dict(),nd:dict(),esfera:dict(),acao:dict(),po:dict(),forn:dict(),amparo:dict(),lic:dict()}, nomes={}, out=[];
     for(const [ne,{r,linhas}] of porNE){
       const ugr=g(r,'UGR'); nomes[ugr]=nomes[ugr]||g(r,'UGR-Nome');
