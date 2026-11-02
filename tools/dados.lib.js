@@ -79,13 +79,23 @@ const CAEData=(()=>{
         ...V.map(k=>money(t.get(r,k))),t.get(r,'Nº DE PARCELAS'),money(t.get(r,'VALOR DA PARCELA')),t.get(r,'UNIDADES REQUISITANTES'),t.get(r,'CONCILIAÇÃO DAS FONTES'),t.get(r,'Nº CONTROLE PNCP CONTRATO'),t.get(r,'ATUALIZAÇÃO DA FONTE')]); }
     return {ref,cols:['num','tipo','compra','modal','proc','objeto','info','cat','forn','cnpj','assin','ini','fim','vini','vglob','vacum','parc','vparc','unid','concil','pncp','fonteAtual'],rows};
   }
-  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV){
+  function atas(csv){ // aba "DO - ARP": atas de registro de preços vigentes
+    const all=parseCSV(csv), t=table(all,['SITUAÇÃO','Nº DA ATA']);
+    let ref=''; for(const r of all.slice(0,8)){ const i=r.indexOf('ATUALIZADO EM'); if(i>=0){ ref=String(r[i+1]||'').trim(); break; } }
+    const money=v=>v===''?null:r2(num(v)), rows=[];
+    for(const r of t.data){ const n=t.get(r,'Nº DA ATA'); if(!n) continue; const g=k=>t.get(r,k);
+      rows.push([n,g('Nº DO PREGÃO'),g('OBJETO'),g('FORNECEDOR'),g('CNPJ DO FORNECEDOR'),isoDate(g('DATA DA DIVULGAÇÃO NO COMPRAS.GOV')),isoDate(g('DATA DA ASSINATURA')),isoDate(g('INÍCIO DA VIGÊNCIA')),isoDate(g('FIM DA VIGÊNCIA')),
+        money(g('VALOR TOTAL REGISTRADO')),g('QUANTIDADE DE ITENS'),g('ITENS CONTEMPLADOS'),g('Nº CONTROLE PNCP ATA'),g('DATA DA PUBLICAÇÃO NO PNCP'),g('ID COMPRA'),g('AGENTE DE CONTRATAÇÃO'),g('ITENS RESUMIDOS'),g('PAG'),g('UNIDADE APOIADA'),g('SITUAÇÃO DO ENRIQUECIMENTO')]); }
+    return {ref,cols:['ata','pregao','objeto','forn','cnpj','divulg','assin','ini','fim','valor','qtd','itens','pncpAta','pubPncp','idCompra','agente','resumo','pag','unidade','enriq'],rows};
+  }
+  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV,arCSV){
     const ne=notas(parseCSV(neCSV),siglas), ex=execucao(parseCSV(execCSV),siglas);
     ex.ref=ne.ref; Object.assign(ex.ugs,ne.ugs);
     let r=null; if(rpCSV){ try{ r=rp(rpCSV); if(!r.meses.length) r=null; }catch(e){ r=null; } }
     let c=null; if(ctCSV){ try{ c=contratos(ctCSV); if(!c.rows.length) c=null; }catch(e){ c=null; } }
-    return {ex,ne,rp:r,ct:c};
+    let a=null; if(arCSV){ try{ a=atas(arCSV); if(!a.rows.length) a=null; }catch(e){ a=null; } }
+    return {ex,ne,rp:r,ct:c,ar:a};
   }
-  return {parseCSV,num,transformar,execucao,notas,rp,contratos};
+  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas};
 })();
 /*/DATALIB*/
