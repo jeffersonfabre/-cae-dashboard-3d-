@@ -13,3 +13,8 @@ Desenvolvido por **DomDevLabs** · v1.12.0
 - **iPhone (Safari):** toque em **Instalar app** e siga o passo a passo: Compartilhar > *Adicionar à Tela de Início*.
 
 O ícone é o brasão do CAE e o app abre em tela cheia com o nome **CAE Dashboard**.
+
+## Banco de dados (atualização automática)
+Fonte: planilha **BD Site Dashboad CAE** (abas Execução Orçamentária e NE, espelhadas por IMPORTRANGE).
+`.github/workflows/atualizar-dados.yml` roda em dias úteis às 06:56 (Brasília): lê a planilha, regenera os dados do `index.html`
+e, se mudaram, sobe a versão e faz push (a Vercel publica). Planilha pública → leitura por CSV; privada → secret `GOOGLE_SERVICE_ACCOUNT_JSON`.
