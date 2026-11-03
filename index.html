@@ -202,10 +202,20 @@
   #refreshBtn svg,.p-head .refresh svg{width:14px;height:14px}
   .spin svg{animation:giro .8s linear infinite}@keyframes giro{to{transform:rotate(360deg)}}
   .p-head .refresh{position:absolute;right:64px;top:18px}
-  #panel{inset:0;top:0;bottom:0;right:0;width:100%;height:100%;max-width:none;border:0;border-radius:0;box-shadow:none;transform:translateY(14px);opacity:0;pointer-events:none;transition:opacity .25s,transform .3s;z-index:20;overflow:hidden}
+  #panel{inset:0;top:0;bottom:0;right:0;width:100%;height:100%;max-width:none;border:0;border-radius:0;box-shadow:none;transform:translateY(14px);opacity:0;pointer-events:none;transition:opacity .25s,transform .3s;z-index:20;overflow:hidden;overflow:clip;height:100dvh}
   #panel.open{transform:none;opacity:1;pointer-events:auto}
   #panel>*{width:100%;max-width:1280px;margin-left:auto;margin-right:auto}
-  .p-head{padding:22px 24px 14px}
+  .p-head{padding:calc(env(safe-area-inset-top,0px) + 22px) 24px 14px}
+  .close{top:calc(env(safe-area-inset-top,0px) + 18px)}.p-head .refresh{top:calc(env(safe-area-inset-top,0px) + 18px)}
+  .credit .fx{display:none}
+  @media (max-width:720px){
+    #panel{overflow:hidden auto;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    .p-head{position:sticky;top:0;z-index:6;background:var(--panel);padding-left:16px;padding-right:16px}
+    .p-body{flex:none;overflow:visible;min-height:auto;padding:14px 16px 24px}
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;padding:12px 16px}.kpi{padding:10px 12px}.kpi .v{font-size:18px}.kpi .l{font-size:10.5px}
+    .credit{position:sticky;bottom:0;background:var(--panel);z-index:5}
+    input,select,textarea{font-size:16px!important}
+    .filters{display:block}.exf{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px;min-width:0}.exf input{width:100%;box-sizing:border-box}.credit .fx{display:inline-block;all:unset;cursor:pointer;font:700 12px Inter,sans-serif;color:var(--text);border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 14px}}
   .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));padding:16px 24px}
   .p-body{min-height:0;padding:18px 24px 28px}
   .p-body table{width:100%}
@@ -289,7 +299,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.16.8</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><button class="fx" id="pClose2" aria-label="Fechar">✕ Fechar</button><span>v1.16.11</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -1522,7 +1532,7 @@ function exRender(body){
   inp.oninput=e=>{ exQ=e.target.value; exRender(body); };
   if(hadFocus){ inp.focus(); inp.setSelectionRange(pos,pos); }
   body.querySelectorAll('[data-ug]').forEach(b=>b.onclick=()=>{ exQ=b.dataset.ug; exRender(body); });
-  body.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{ spSel=spSel===b.dataset.sp?'':b.dataset.sp; exRender(body); const d=body.querySelector('#spDet'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}); });
+  body.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{ spSel=spSel===b.dataset.sp?'':b.dataset.sp; exRender(body); const d=body.querySelector('#spDet'); if(d){ const pb=document.getElementById('pBody'); pb.scrollTo({top:pb.scrollTop+d.getBoundingClientRect().top-pb.getBoundingClientRect().top-8,behavior:'smooth'}); } });
   const spx=body.querySelector('[data-spx]'); if(spx) spx.onclick=()=>{ spSel=''; exRender(body); };
   drawKpis([{l:'Crédito recebido',v:mi(T.rec),s:(set&&set.size===1?sig([...set][0])+' · ':'')+'Provisão + destaque'},{l:'Crédito disponível',v:mi(T.disp),s:pf(pct(T.disp,T.rec))+' do recebido'},{l:'Empenhado',v:pf(pct(T.emp,T.rec)),s:mi(T.emp)},{l:'Liquidado',v:pf(pct(T.liq,T.rec)),s:mi(T.liq)},{l:'Pago',v:pf(pct(T.pago,T.rec)),s:mi(T.pago)}]);
   requestAnimationFrame(()=>body.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
@@ -1583,6 +1593,8 @@ function showTab(i){
   requestAnimationFrame(()=>body.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
 }
 document.getElementById('pClose').onclick=()=>{ if(document.getElementById('neDetail').classList.contains('open')){ neDetailClose(); return; } panel.classList.remove('open'); document.body.classList.remove('pano'); selected=null; curTab=null; };
+document.getElementById('pClose2').onclick=()=>document.getElementById('pClose').click();
+panel.addEventListener('scroll',()=>{ if(innerWidth>720){ panel.scrollTop=0; panel.scrollLeft=0; } }); // o painel nunca rola (só o corpo dele): evita o cabeçalho sumir no iPhone
 addEventListener('keydown',e=>{ if(e.key==='Escape') document.getElementById('pClose').click(); });
 document.getElementById('upd').textContent=EX.ref;
 document.getElementById('refreshBtn').onclick=()=>atualizar(false);
