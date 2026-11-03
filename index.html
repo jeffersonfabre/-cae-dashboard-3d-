@@ -265,7 +265,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.15.2</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.15.3</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -481,8 +481,6 @@ function neRender(body){
 function neKpis(rows){
   const tot=rows.reduce((a,r)=>a+r[9],0), n=rows.length, mx=rows.reduce((m,r)=>r[9]>(m?m[9]:-1)?r:m,null);
   return [{l:'Notas de empenho',v:n.toLocaleString('pt-BR'),s:'NEs distintas'},
-    {l:'Valor empenhado',v:mi(tot),s:brl2(tot)},
-    {l:'Valor médio por NE',v:n?mi(tot/n):'—',s:'Total ÷ quantidade'},
     {l:'Maior NE',v:mx?mi(mx[9]):'—',s:mx?mx[1]+' · '+neSig(mx[2]):'—'}];
 }
 function neFilterLine(){ const set=ugMatch(neF.ug), nums=neNumbers(neF.q);
