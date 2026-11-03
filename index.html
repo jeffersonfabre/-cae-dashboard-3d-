@@ -279,7 +279,7 @@
   <div class="kpis" id="pKpis"></div>
   <div class="tabs" id="pTabs"></div>
   <div class="p-body" id="pBody"></div>
-  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.16.5</span></div>
+  <div class="credit"><span>Desenvolvido por <b>DomDevLabs</b></span><span>v1.16.6</span></div>
 </aside>
 <section id="neDetail" aria-label="Detalhe da nota de empenho">
   <div class="nd-wrap">
@@ -1474,6 +1474,19 @@ function spPanel(rows){
   let k=0;
   return `<h3 style="margin-top:20px">Execução por sistema <small class="sm">· pelo PI · % = empenhado ÷ recebido · ordem do maior crédito recebido</small></h3><div class="spg">`+l.map(g=>spCard(g,g.s===SP_OUT?0:k++)).join('')+`</div>`;
 }
+function odsChart(rows){ // barras agrupadas por ODS (Grande Comando): recebido x empenhado
+  const l=exGroup(rows,r=>r[1]).map(g=>({n:EX.t.gc[g.k],rec:g.rec,emp:g.emp})).filter(g=>g.rec>0||g.emp>0); if(!l.length) return '';
+  const max=Math.max(...l.map(g=>Math.max(g.rec,g.emp)),1), W=720, pl=92, pr=150, rh=46, bh=15, H=l.length*rh+8, bw=W-pl-pr;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Crédito recebido e empenhado por ODS">`;
+  l.forEach((g,i)=>{ const y=4+i*rh, w1=Math.max(g.rec/max*bw,g.rec>0?2:0), w2=Math.max(g.emp/max*bw,g.emp>0?2:0);
+    svg+=`<g><title>${esc(g.n)} · recebido ${brl(g.rec)} · empenhado ${brl(g.emp)} (${pf(pct(g.emp,g.rec))})</title>`+
+      `<text x="${pl-10}" y="${y+bh+5}" text-anchor="end" font-size="13" font-weight="800" fill="#e8eef8">${esc(g.n)}</text>`+
+      `<rect x="${pl}" y="${y}" width="${w1.toFixed(1)}" height="${bh}" rx="3" fill="#2f7bff"/>`+
+      `<text x="${(pl+w1+7).toFixed(1)}" y="${y+bh-3}" font-size="11.5" fill="#8fa3c2">${mi(g.rec)}</text>`+
+      `<rect x="${pl}" y="${y+bh+3}" width="${w2.toFixed(1)}" height="${bh}" rx="3" fill="#22c38e"/>`+
+      `<text x="${(pl+w2+7).toFixed(1)}" y="${y+2*bh}" font-size="11.5" fill="#22c38e">${mi(g.emp)} · ${pf(pct(g.emp,g.rec))}</text></g>`; });
+  return svg+`</svg><div class="lg"><span><b style="background:#2f7bff"></b>Recebido</span><span><b style="background:#22c38e"></b>Empenhado <em>(% do recebido)</em></span></div>`;
+}
 function exRender(body){
   const set=ugMatch(exQ), rows=set?EX.rows.filter(r=>set.has(r[0])):EX.rows, T=exSum(rows);
   const ugs=exGroup(EX.rows,r=>r[0]);
@@ -1486,15 +1499,8 @@ function exRender(body){
     `<div><h3>Situação do empenhado</h3><table><tbody>`+
     [['Empenhado a liquidar',T.aliq],['Empenhado em liquidação',T.emliq],['Liquidado a pagar',T.liqpag],['Pago',T.pago]].map(([n,v])=>`<tr><td>${n}</td><td style="text-align:right">${brl(v)}</td><td style="text-align:right;color:var(--muted)">${pf(pct(v,T.emp))}</td></tr>`).join('')+`</tbody></table></div></div>`;
   h+=spPanel(rows);
-  const tb=(tit,list,lab,click)=>`<div><h3 style="margin-top:20px">${tit}</h3><div class="tw"><table><thead><tr><th>${lab}</th><th style="text-align:right">Recebido</th><th style="text-align:right">Empenhado</th><th style="text-align:right">%</th></tr></thead><tbody>`+
-    list.map(g=>`<tr${click?` class="clk" data-ug="${esc(sig(g.k))}"`:''}><td>${lab==='UG'?`<b>${esc(sig(g.k))}</b>`:esc(g.n)}</td><td style="text-align:right">${mi(g.rec)}</td><td style="text-align:right">${mi(g.emp)}</td><td style="text-align:right">${pf(pct(g.emp,g.rec))}</td></tr>`).join('')+`</tbody></table></div></div>`;
-  const nd=exGroup(rows,r=>r[6]).map(g=>({...g,n:EX.t.nd[g.k][0]+' · '+EX.t.nd[g.k][1].replace(/^\d+\s*-\s*/,'')}));
-  const pi=exGroup(rows,r=>r[5]).slice(0,8).map(g=>({...g,n:EX.t.pi[g.k][0]+' · '+EX.t.pi[g.k][1].replace(/^[^-]*-\s*/,'')}));
-  const gc=exGroup(rows,r=>r[1]).map(g=>({...g,n:EX.t.gc[g.k]}));
-  h+=`<div class="cols2">`;
-  if(!set||set.size>1) h+=tb('Por UG responsável (clique para filtrar)',exGroup(rows,r=>r[0]).slice(0,12),'UG',true);
-  if(set) h+=`</div><h3 style="margin-top:20px">Por mês · valor empenhado acumulado e quantidade de NE</h3><div class="chart">${exChart(set)}</div>`+exLinhas(rows);
-  else h+=tb('Por natureza de despesa',nd.slice(0,8),'ND')+tb('Por plano interno (PI) · maiores',pi,'PI')+tb('Por Grande Comando',gc,'Cmdo')+`</div>`;
+  if(set) h+=`<h3 style="margin-top:20px">Por mês · valor empenhado acumulado e quantidade de NE</h3><div class="chart">${exChart(set)}</div>`+exLinhas(rows);
+  else h+=`<h3 style="margin-top:20px">Por ODS (Órgão de Direção Setorial) <small class="sm">· recebido × empenhado</small></h3><div class="chart">${odsChart(rows)}</div>`;
   h+=`<div class="note">Fonte: aba “Execução” da planilha-banco do CAE (Tesouro Gerencial), posição até <b>${EX.ref}</b>. Valores em R$; “mi” = milhões, “bi” = bilhões. Digite a sigla da UG (ex.: HFAG) ou parte dela (ex.: HF). Sistemas: aba “Sistemas PI” (PI → sistema). Aparecem os 11 sistemas com bolacha; os demais sistemas e os PIs sem sistema somam em “OUTROS”. Com filtro, o gráfico mensal usa as NEs (aba NE): a aba Execução não traz data, então o crédito recebido não pode ser aberto por mês.</div>`;
   const hadFocus=document.activeElement&&document.activeElement.id==='exUG', pos=hadFocus?document.activeElement.selectionStart:0;
   body.innerHTML=h;
