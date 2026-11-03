@@ -95,15 +95,21 @@ const CAEData=(()=>{
       rows.push([x[0],x[1],x[2],D(x[3]),D(x[4]),x[5],x[6],x[7],x[8],x[9],x[10],x[11],x[12],x[13],x[14],D(x[15]),D(x[16]),D(x[17]),int(x[18]),x[19],D(x[20]),money(x[21]),D(x[22]),D(x[23]),D(x[24]),x[25],int(x[26]),int(x[27]),int(x[28]),int(x[29]),int(x[30]),x[31],D(x[32]),x[33]]); }
     return {ref:'',cols:['status','dfd','idpca','pcaIni','pcaFim','area','anoPca','modal','nContr','objeto','natureza','sistema','complex','secao','demanda','ini','fim','chegada','qtd','pag','dataPag','valor','juridica','publ','abertura','agente','revog','desert','fracass','andam','homol','pctHomol','primArp','dfdVig'],rows};
   }
-  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV,arCSV,lcCSV){
+  function sistemas(csv){ // aba "Sistemas PI": Plano Interno -> Sigla do sistema
+    const t=table(parseCSV(csv),['Plano Interno','Sigla']), g=t.get, pi={};
+    for(const r of t.data){ const p=g(r,'Plano Interno'), s=g(r,'Sigla'); if(p&&s) pi[p]=s; }
+    return {pi};
+  }
+  function transformar(execCSV,neCSV,siglas,rpCSV,ctCSV,arCSV,lcCSV,spCSV){
     const ne=notas(parseCSV(neCSV),siglas), ex=execucao(parseCSV(execCSV),siglas);
     ex.ref=ne.ref; Object.assign(ex.ugs,ne.ugs);
     let r=null; if(rpCSV){ try{ r=rp(rpCSV); if(!r.meses.length) r=null; }catch(e){ r=null; } }
     let c=null; if(ctCSV){ try{ c=contratos(ctCSV); if(!c.rows.length) c=null; }catch(e){ c=null; } }
     let a=null; if(arCSV){ try{ a=atas(arCSV); if(!a.rows.length) a=null; }catch(e){ a=null; } }
     let l=null; if(lcCSV){ try{ l=gerencial(lcCSV); if(!l.rows.length) l=null; }catch(e){ l=null; } }
-    return {ex,ne,rp:r,ct:c,ar:a,lc:l};
+    let sp=null; if(spCSV){ try{ sp=sistemas(spCSV); if(!Object.keys(sp.pi).length) sp=null; }catch(e){ sp=null; } }
+    return {ex,ne,rp:r,ct:c,ar:a,lc:l,sp};
   }
-  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas,gerencial};
+  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas,gerencial,sistemas};
 })();
 /*/DATALIB*/

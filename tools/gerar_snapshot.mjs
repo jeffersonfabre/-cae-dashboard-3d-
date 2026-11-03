@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Gera o "snapshot" dos dados (reserva embutida no index.html) a partir da planilha-banco.
 //   node tools/gerar_snapshot.mjs --fetch [--bump]        baixa os CSV públicos da planilha
-//   node tools/gerar_snapshot.mjs exec.csv ne.csv [rp.csv] [ct.csv] [ar.csv] [dg.csv] [--bump]  usa CSV locais
+//   node tools/gerar_snapshot.mjs exec.csv ne.csv [rp.csv] [ct.csv] [ar.csv] [dg.csv] [sp.csv] [--bump]  usa CSV locais
 // A lógica de transformação é a MESMA do site (bloco /*DATALIB*/ do index.html, espelhado em tools/dados.lib.js).
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ID = '19Za-0_spkX6aiCL0e8h-pTljgTLzwSAb8GwBmXxEy3g', GID = { exec: 1963592069, ne: 892020825, rp: 435294578, ct: 843442876, ar: 57478241, lc: 1997489688 };
+const ID = '19Za-0_spkX6aiCL0e8h-pTljgTLzwSAb8GwBmXxEy3g', GID = { exec: 1963592069, ne: 892020825, rp: 435294578, ct: 843442876, ar: 57478241, lc: 1997489688, sp: 1393334488 };
 const args = process.argv.slice(2), bump = args.includes('--bump'), pos = args.filter(a => !a.startsWith('--'));
 const htmlPath = path.join(raiz, 'index.html');
 let html = fs.readFileSync(htmlPath, 'utf8');
@@ -24,12 +24,13 @@ const rpCSV = args.includes('--fetch') ? await baixar(GID.rp) : (pos[2] ? fs.rea
 const ctCSV = args.includes('--fetch') ? await baixar(GID.ct) : (pos[3] ? fs.readFileSync(pos[3], 'utf8') : null);
 const arCSV = args.includes('--fetch') ? await baixar(GID.ar) : (pos[4] ? fs.readFileSync(pos[4], 'utf8') : null);
 const lcCSV = args.includes('--fetch') ? await baixar(GID.lc) : (pos[5] ? fs.readFileSync(pos[5], 'utf8') : null);
-const { ex, ne, rp, ct, ar, lc } = CAEData.transformar(execCSV, neCSV, siglas, rpCSV, ctCSV, arCSV, lcCSV); ex.siglas = siglas;
+const spCSV = args.includes('--fetch') ? await baixar(GID.sp) : (pos[6] ? fs.readFileSync(pos[6], 'utf8') : null);
+const { ex, ne, rp, ct, ar, lc, sp } = CAEData.transformar(execCSV, neCSV, siglas, rpCSV, ctCSV, arCSV, lcCSV, spCSV); ex.siglas = siglas;
 if (ne.rows.length < 1000 || ex.rows.length < 100) throw new Error(`Leitura suspeita (${ne.rows.length} NEs, ${ex.rows.length} linhas de execução) — abortando`);
 const tag = (id, o) => `<script id="${id}" type="application/json">${JSON.stringify(o)}</script>`;
 const re = id => new RegExp(`<script id="${id}" type="application/json">[\\s\\S]*?</script>`);
-const ids = ['execData', 'neData', 'rpData', 'ctData', 'arData', 'lcData'], antes = ids.map(i => html.match(re(i))?.[0]).join();
-html = html.replace(re('execData'), () => tag('execData', ex)).replace(re('neData'), () => tag('neData', ne)).replace(re('rpData'), () => tag('rpData', rp)).replace(re('ctData'), () => tag('ctData', ct)).replace(re('arData'), () => tag('arData', ar)).replace(re('lcData'), () => tag('lcData', lc));
+const ids = ['execData', 'neData', 'rpData', 'ctData', 'arData', 'lcData', 'spData'], antes = ids.map(i => html.match(re(i))?.[0]).join();
+html = html.replace(re('execData'), () => tag('execData', ex)).replace(re('neData'), () => tag('neData', ne)).replace(re('rpData'), () => tag('rpData', rp)).replace(re('ctData'), () => tag('ctData', ct)).replace(re('arData'), () => tag('arData', ar)).replace(re('lcData'), () => tag('lcData', lc)).replace(re('spData'), () => tag('spData', sp));
 const depois = ids.map(i => html.match(re(i))[0]).join();
 if (antes === depois) { console.log('SEM_MUDANCA: dados iguais ao snapshot publicado'); process.exit(0); }
 let msg = `MUDOU: ${ne.rows.length} NEs · ${ex.rows.length} linhas de execução · ref ${ne.ref}`;

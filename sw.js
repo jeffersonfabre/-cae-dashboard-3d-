@@ -1,5 +1,5 @@
-// CAE Dashboard — service worker (v1.15.3)
-const CACHE = 'cae-dashboard-v1.15.3';
+// CAE Dashboard — service worker (v1.16.0)
+const CACHE = 'cae-dashboard-v1.16.0';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest',
   '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/apple-touch-icon.png'];
 
