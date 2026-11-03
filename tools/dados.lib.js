@@ -41,6 +41,21 @@ const CAEData=(()=>{
     return {ugs,t:{gc:D.gc.list,uo:D.uo.list,acao:D.acao.list,fonte:D.fonte.list,pi:D.pi.list,nd:D.nd.list,po:D.po.list},
       cols:['ugr','gc','uo','acao','fonte','pi','nd','prov','dest','disp','aliq','emliq','liqpag','pago','ptres','po'],rows:out};
   }
+  // A aba NE traz os saldos (a liquidar, em liquidação, liquidado a pagar, pago) somados mês a mês desde a emissão da NE
+  // (x2 no mês corrente, x3 no mês anterior... até x11). O "Valor a NE" está certo (bate com a aba Execução).
+  // O fator de cada mês é calibrado nas NEs de 1 linha (saldo total / valor) e os saldos são divididos por ele.
+  // Se a planilha for corrigida na origem o fator vira 1 e nada muda.
+  function corrigirSaldos(rows){
+    const ym=d=>d?(+d.slice(0,4))*12+(+d.slice(5,7)):0, cnt=new Map();
+    for(const r of rows){ const L=r[17]; if(L.length!==1||!(L[0][0]>0)) continue;
+      const k=(L[0][1]+L[0][2]+L[0][3]+L[0][4])/L[0][0], ki=Math.round(k);
+      if(ki>=1&&Math.abs(k-ki)<0.02){ const m=ym(r[0]); let c=cnt.get(m); if(!c) cnt.set(m,c=new Map()); c.set(ki,(c.get(ki)||0)+1); } }
+    const fator=new Map();
+    for(const [m,c] of cnt){ let best=1,n=0,tot=0; for(const [ki,q] of c){ tot+=q; if(q>n){ n=q; best=ki; } } if(tot>=5&&n/tot>=0.7) fator.set(m,best); }
+    const f=m=>{ if(fator.has(m)) return fator.get(m); if(fator.has(m+1)) return fator.get(m+1)+1; if(fator.has(m-1)&&fator.get(m-1)>1) return fator.get(m-1)-1; return 1; };
+    for(const r of rows){ const k=f(ym(r[0])); if(k<=1) continue; for(const l of r[17]) for(let i=1;i<5;i++) l[i]=r2(l[i]/k); }
+    return rows;
+  }
   function notas(rows,siglas){
     const t=table(rows,['Data','NE','UGR','Valor a NE']), g=t.get;
     const porNE=new Map();
@@ -57,6 +72,7 @@ const CAEData=(()=>{
         D.forn.idx([g(r,'Fornecedor-CNPJ'),g(r,'Fornecedor-Nome'),g(r,'Fornecedor-Endereço'),g(r,'Fornecedor-Município'),g(r,'Fornecedor-UF'),g(r,'Fornecedor-CEP'),g(r,'Fornecedor-Telefone')]),
         D.amparo.idx(g(r,'Amparo Legal')),g(r,'Processo'),D.lic.idx(g(r,'Licitação')),linhas]); }
     out.sort((a,b)=>a[0]<b[0]?1:a[0]>b[0]?-1:a[1]<b[1]?1:a[1]>b[1]?-1:0);
+    corrigirSaldos(out);
     const ugs={}; for(const c of D.ugr.list) ugs[c]=siglas[c]||[c,nomes[c]||c];
     const dts=out.map(r=>r[0]).filter(Boolean), mx=dts.reduce((m,d)=>d>m?d:m,'');
     const dd={}; for(const k in D) dd[k]=D[k].list;
@@ -110,6 +126,6 @@ const CAEData=(()=>{
     let sp=null; if(spCSV){ try{ sp=sistemas(spCSV); if(!Object.keys(sp.pi).length) sp=null; }catch(e){ sp=null; } }
     return {ex,ne,rp:r,ct:c,ar:a,lc:l,sp};
   }
-  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas,gerencial,sistemas};
+  return {parseCSV,num,transformar,execucao,notas,rp,contratos,atas,gerencial,sistemas,corrigirSaldos};
 })();
 /*/DATALIB*/
