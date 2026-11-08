@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAE · Painel Executivo</title>
+<meta name="description" content="Painel executivo do Centro de Aquisições Específicas (UASG 120195): execução orçamentária, empenhos, contratos, atas, licitações e restos a pagar.">
+<meta name="theme-color" content="#15283D">
+<link rel="icon" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2F4F6; --folha:#FFFFFF; --tinta:#16212E; --tinta2:#4A5868; --tinta3:#7B8796;
+  --linha:#D6DCE3; --linha2:#E7EBF0;
+  --azul:#1F4E8C; --azul2:#5C86BD; --ceu:#A9C3E0; --nevoa:#DCE6F2;
+  --sinal:#B87A00; --sinal-bg:#FBF1D9; --alerta:#A8322F; --alerta-bg:#F8E3E2; --ok:#2F6B4F; --ok-bg:#E2EFE8;
+  --cabeca:#15283D; --cabeca-t:#F2F4F6;
+  --disp:#C7CFD8;
+  --fd:'Barlow Condensed','Arial Narrow',sans-serif; --ft:'Public Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --papel:#0F1823; --folha:#16212E; --tinta:#E6EBF1; --tinta2:#AEB9C6; --tinta3:#7D8A99;
+  --linha:#2A3747; --linha2:#212D3B; --azul:#6E9BD6; --azul2:#4A73AA; --ceu:#33507A; --nevoa:#1D2C40;
+  --sinal:#E2A93A; --sinal-bg:#3A2E15; --alerta:#E07A76; --alerta-bg:#3D1F20; --ok:#7FC3A0; --ok-bg:#183126;
+  --cabeca:#0A121B; --disp:#3A4757; } }
+:root[data-theme="dark"]{
+  --papel:#0F1823; --folha:#16212E; --tinta:#E6EBF1; --tinta2:#AEB9C6; --tinta3:#7D8A99;
+  --linha:#2A3747; --linha2:#212D3B; --azul:#6E9BD6; --azul2:#4A73AA; --ceu:#33507A; --nevoa:#1D2C40;
+  --sinal:#E2A93A; --sinal-bg:#3A2E15; --alerta:#E07A76; --alerta-bg:#3D1F20; --ok:#7FC3A0; --ok-bg:#183126;
+  --cabeca:#0A121B; --disp:#3A4757; }
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--papel);color:var(--tinta);font:15px/1.55 var(--ft);font-feature-settings:"tnum" 1,"lnum" 1}
+a{color:var(--azul)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* cabeçalho */
+.top{background:var(--cabeca);color:var(--cabeca-t)}
+.top .in{max-width:1240px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px}
+.top img{width:42px;height:auto;flex:none}
+.top .id{flex:1;min-width:0}
+.top .org{font:600 13px/1.2 var(--ft);opacity:.75;margin:0}
+.top h1{font:600 26px/1.05 var(--fd);margin:2px 0 0;letter-spacing:.01em}
+.pos{text-align:right;font-size:13px;line-height:1.35}
+.pos b{font:600 18px/1 var(--fd);display:block;letter-spacing:.02em}
+.pos .src{opacity:.75}
+.pos .src.res{color:#F2C46B;opacity:1}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid currentColor;background:none;border-radius:4px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
+.top .btn{color:var(--cabeca-t);border-color:rgba(242,244,246,.4)}
+.top .btn:hover{border-color:var(--cabeca-t)}
+.btn svg{width:16px;height:16px}
+.btn.spin svg{animation:gira 1s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.btn.spin svg{animation:none}}
+
+nav.abas{background:var(--folha);border-bottom:1px solid var(--linha);position:sticky;top:0;z-index:5}
+nav.abas .in{max-width:1240px;margin:0 auto;padding:0 12px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.abas a{display:block;padding:13px 12px 11px;text-decoration:none;color:var(--tinta2);font-weight:500;font-size:14.5px;border-bottom:3px solid transparent;white-space:nowrap}
+nav.abas a:hover{color:var(--tinta)}
+nav.abas a[aria-current="page"]{color:var(--tinta);border-bottom-color:var(--azul);font-weight:600}
+
+main{max-width:1240px;margin:0 auto;padding:28px 24px 48px}
+.vista[hidden]{display:none}
+h2.tit{font:600 30px/1.1 var(--fd);margin:0 0 4px;letter-spacing:.005em}
+.lede{color:var(--tinta2);margin:0 0 22px;max-width:70ch}
+h3{font:600 21px/1.2 var(--fd);margin:0 0 12px;letter-spacing:.01em}
+.painel{background:var(--folha);border:1px solid var(--linha);border-radius:6px;padding:20px 22px}
+.grade{display:grid;gap:20px}
+.g2{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media (max-width:900px){.g2{grid-template-columns:minmax(0,1fr)}}
+.nota{color:var(--tinta3);font-size:13px;margin:10px 0 0}
+
+/* herói: a pista da execução */
+.pista{padding:26px 26px 22px}
+.pista .cab{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 32px;margin-bottom:20px}
+.pista .rot{color:var(--tinta2);font-size:14px;margin:0}
+.pista .total{font:700 64px/0.95 var(--fd);letter-spacing:-.005em;margin:4px 0 0}
+.pista .total small{font-size:.45em;font-weight:600;color:var(--tinta2);margin-right:6px}
+.taxas{display:flex;gap:28px;flex-wrap:wrap}
+.taxa{min-width:110px}
+.taxa b{display:block;font:600 34px/1 var(--fd)}
+.taxa span{font-size:13px;color:var(--tinta2)}
+.faixa{position:relative;height:56px;display:flex;border-radius:4px;overflow:hidden;background:var(--disp)}
+.faixa i{display:block;height:100%;position:relative}
+.faixa i+i{box-shadow:inset 1px 0 0 var(--folha)}
+.marcas{position:relative;height:22px;margin-top:6px;font-size:12px;color:var(--tinta3)}
+.marcas span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.marcas span::before{content:"";position:absolute;left:50%;top:-6px;height:5px;border-left:1px solid var(--tinta3)}
+.marcas span:first-child{transform:none}.marcas span:first-child::before{left:0}
+.marcas span:last-child{transform:translateX(-100%)}.marcas span:last-child::before{left:auto;right:0}
+.legenda{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px 18px;margin-top:14px}
+.legenda div{border-top:3px solid var(--c);padding-top:8px}
+.legenda b{display:block;font:600 22px/1.1 var(--fd)}
+.legenda span{font-size:13px;color:var(--tinta2)}
+.legenda em{font-style:normal;color:var(--tinta3);font-size:12.5px;display:block}
+@media (max-width:760px){.legenda{grid-template-columns:repeat(2,minmax(0,1fr))}.pista .total{font-size:48px}.faixa{height:40px}}
+
+/* barras horizontais */
+.barras{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px 12px;align-items:center;font-size:14px}
+.barras .n{font-weight:600;white-space:nowrap}
+.barras .t{height:14px;background:var(--nevoa);border-radius:2px;position:relative;overflow:hidden}
+.barras .t i{position:absolute;left:0;top:0;bottom:0;background:var(--ceu)}
+.barras .t i.p{background:var(--azul)}
+.barras .v{text-align:right;white-space:nowrap;color:var(--tinta2)}
+.chave{display:flex;gap:16px;font-size:12.5px;color:var(--tinta2);margin:0 0 12px;flex-wrap:wrap}
+.chave span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:-1px}
+
+/* vencimentos */
+.venc{list-style:none;margin:0;padding:0}
+.venc li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid var(--linha2)}
+.venc li:first-child{border-top:0;padding-top:0}
+.dias{font:700 24px/1 var(--fd);text-align:center;padding:6px 0 5px;border-radius:4px;background:var(--sinal-bg);color:var(--sinal)}
+.dias small{display:block;font:500 11px/1.2 var(--ft)}
+.dias.urg{background:var(--alerta-bg);color:var(--alerta)}
+.venc .o{font-weight:600;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.venc .m{font-size:13px;color:var(--tinta2)}
+
+/* faixa de resumo */
+.resumo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--folha);border:1px solid var(--linha);border-radius:6px}
+.resumo a{display:block;padding:18px 20px;text-decoration:none;color:inherit;border-left:1px solid var(--linha)}
+.resumo a:first-child{border-left:0}
+.resumo a:hover{background:var(--papel)}
+.resumo .k{font-size:13.5px;color:var(--tinta2)}
+.resumo .v{font:600 32px/1.05 var(--fd);margin:4px 0 2px}
+.resumo .s{font-size:13px;color:var(--tinta3)}
+.resumo svg{display:block;margin-top:6px;max-width:100%;height:auto}
+@media (max-width:900px){.resumo{grid-template-columns:repeat(2,minmax(0,1fr))}.resumo a:nth-child(3){border-left:0}.resumo a:nth-child(n+3){border-top:1px solid var(--linha)}}
+
+/* indicadores das abas */
+.ind{display:flex;flex-wrap:wrap;gap:0;background:var(--folha);border:1px solid var(--linha);border-radius:6px;margin-bottom:20px}
+.ind>div{flex:1 1 170px;padding:14px 18px;border-left:1px solid var(--linha)}
+.ind>div:first-child{border-left:0}
+.ind .k{font-size:13px;color:var(--tinta2)}
+.ind .v{font:600 28px/1.1 var(--fd);margin-top:2px}
+.ind .s{font-size:12.5px;color:var(--tinta3)}
+@media (max-width:640px){.ind>div{flex-basis:50%;border-left:0;border-top:1px solid var(--linha)}.ind>div:nth-child(-n+2){border-top:0}.ind>div:nth-child(even){border-left:1px solid var(--linha)}}
+
+/* filtros */
+.filtros{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:end}
+.filtros label{display:flex;flex-direction:column;font-size:12.5px;color:var(--tinta2);gap:4px}
+.filtros input,.filtros select{background:var(--folha);border:1px solid var(--linha);border-radius:4px;padding:8px 10px;min-width:150px;font-size:14px}
+.filtros input[type=search]{min-width:260px}
+@media (max-width:640px){.filtros label{flex:1 1 100%}.filtros input[type=search],.filtros input,.filtros select{min-width:0;width:100%}}
+.limpar{background:none;border:0;color:var(--azul);cursor:pointer;padding:8px 4px;font-weight:600;font-size:14px}
+
+/* tabelas */
+.tw{overflow-x:auto;border:1px solid var(--linha);border-radius:6px;background:var(--folha)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-top:1px solid var(--linha2)}
+thead th{border-top:0;background:var(--papel);font-weight:600;font-size:13px;color:var(--tinta2);position:sticky;top:0;white-space:nowrap}
+th.num,td.num{text-align:right;white-space:nowrap}
+th[data-s]{cursor:pointer;user-select:none}
+th[data-s]:hover{color:var(--tinta)}
+th[aria-sort="descending"]::after{content:" ▾"}th[aria-sort="ascending"]::after{content:" ▴"}
+tbody tr:hover{background:var(--papel)}
+tr.clic{cursor:pointer}
+td .sub{display:block;color:var(--tinta3);font-size:12.5px}
+td.obj{min-width:260px;max-width:520px}
+tfoot td{font-weight:700;border-top:2px solid var(--linha)}
+.mini{display:inline-block;width:70px;height:6px;background:var(--nevoa);border-radius:2px;vertical-align:middle;margin-left:8px;position:relative;overflow:hidden}
+.mini i{position:absolute;left:0;top:0;bottom:0;background:var(--azul)}
+.selo{display:inline-block;font-size:12px;font-weight:600;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.selo.ok{background:var(--ok-bg);color:var(--ok)}.selo.warn{background:var(--sinal-bg);color:var(--sinal)}.selo.bad{background:var(--alerta-bg);color:var(--alerta)}.selo.neu{background:var(--nevoa);color:var(--tinta2)}
+.mais{display:block;margin:14px auto 0;background:var(--folha);border:1px solid var(--linha);border-radius:4px;padding:8px 16px;cursor:pointer;font-weight:600}
+.vazio{padding:28px;text-align:center;color:var(--tinta2)}
+tr.det td{background:var(--papel);padding:14px 16px}
+dl.ficha{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 24px;margin:0;font-size:13.5px}
+dl.ficha dt{color:var(--tinta3);font-size:12.5px}
+dl.ficha dd{margin:0}
+
+/* gráficos SVG */
+svg.gr{display:block;width:100%;height:auto;overflow:visible}
+svg.gr text{fill:var(--tinta2);font:12px var(--ft)}
+svg.gr .bar{fill:var(--azul)}
+svg.gr .bar2{fill:var(--ceu)}
+svg.gr .eixo{stroke:var(--linha)}
+svg.gr .val{fill:var(--tinta);font-weight:600}
+
+/* colunas mensais */
+.cols{display:flex;gap:6px;align-items:stretch;height:calc(var(--alt) + 44px)}
+.col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.col i{display:block;width:72%;max-width:56px;background:var(--azul);border-radius:2px 2px 0 0;max-height:var(--alt)}
+.col .cv{font:600 14px/1.2 var(--fd);margin-bottom:4px;white-space:nowrap;color:var(--tinta)}
+.col .cr{font-size:12.5px;color:var(--tinta2);border-top:1px solid var(--linha);align-self:stretch;text-align:center;padding-top:5px;margin-top:0}
+@media (max-width:640px){.col .cv{font-size:11.5px;writing-mode:vertical-rl;transform:rotate(180deg);margin-bottom:4px}.cols{gap:3px}}
+
+/* etapas de licitação */
+.etapas{list-style:none;margin:0;padding:0;counter-reset:e}
+.etapas li{display:grid;grid-template-columns:28px minmax(150px,260px) minmax(0,1fr) 44px;gap:10px;align-items:center;padding:6px 0;font-size:14px;cursor:pointer;border-radius:4px}
+.etapas li:hover{background:var(--papel)}
+.etapas li.on{background:var(--nevoa)}
+.etapas li::before{counter-increment:e;content:counter(e);font:600 15px var(--fd);color:var(--tinta3);text-align:center}
+.etapas li.fora::before{content:"–"}
+.etapas .t{height:12px;background:var(--nevoa);border-radius:2px;overflow:hidden}
+.etapas .t i{display:block;height:100%;background:var(--azul)}
+.etapas li.fora .t i{background:var(--tinta3)}
+.etapas b{text-align:right;font:600 17px var(--fd)}
+@media (max-width:640px){.etapas li{grid-template-columns:22px minmax(0,1fr) 40px}.etapas .t{display:none}}
+
+/* aviso e rodapé */
+#aviso{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);opacity:0;background:var(--tinta);color:var(--papel);padding:10px 16px;border-radius:4px;font-size:14px;max-width:min(560px,92vw);transition:.25s;pointer-events:none;z-index:20}
+#aviso.on{opacity:1;transform:translate(-50%,0)}
+#aviso.err{background:var(--alerta);color:#fff}
+#carregando{padding:60px 0;text-align:center;color:var(--tinta2)}
+footer{border-top:1px solid var(--linha);background:var(--folha)}
+footer .in{max-width:1240px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13.5px;color:var(--tinta2)}
+footer img{width:38px;height:38px}
+footer .esp{flex:1}
+footer button{background:none;border:1px solid var(--linha);border-radius:4px;padding:6px 10px;cursor:pointer;font-size:13px}
+@media (max-width:640px){.top .in{flex-wrap:wrap;padding:12px 16px;gap:10px 12px}.top img{width:34px}.top .id{flex:1 1 calc(100% - 50px)}.top .org{font-size:12px}.top h1{font-size:22px}.pos{text-align:left;flex:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px}.pos b{display:inline;font-size:17px}.pos>span:first-child{display:none}.taxas{gap:18px;width:100%}.taxa{min-width:0;flex:1}.taxa b{font-size:28px}main{padding:22px 16px 40px}.painel{padding:16px}.pista{padding:18px 16px}}
+@media print{nav.abas,.btn,footer button,.filtros,.mais{display:none!important}body{background:#fff}.painel,.tw,.ind,.resumo{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <img src="/executivo/emblema.png" alt="Emblema do CAE" width="42" height="49">
+    <div class="id">
+      <p class="org">Centro de Aquisições Específicas · UASG 120195</p>
+      <h1>Painel executivo</h1>
+    </div>
+    <div class="pos" aria-live="polite"><span>Posição dos dados</span><b id="posicao">—</b><span class="src" id="fonte">carregando…</span></div>
+    <button class="btn" id="atualizar" type="button" aria-label="Atualizar dados da planilha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Atualizar</button>
+  </div>
+</header>
+<nav class="abas" aria-label="Seções">
+  <div class="in">
+    <a href="#geral">Visão geral</a>
+    <a href="#orcamento">Orçamento</a>
+    <a href="#empenhos">Empenhos</a>
+    <a href="#contratos">Contratos</a>
+    <a href="#atas">Atas de registro</a>
+    <a href="#licitacoes">Licitações</a>
+    <a href="#rp">Restos a pagar</a>
+  </div>
+</nav>
+<main id="conteudo">
+  <div id="carregando">Lendo a planilha-banco do CAE…</div>
+  <section class="vista" id="v-geral" hidden></section>
+  <section class="vista" id="v-orcamento" hidden></section>
+  <section class="vista" id="v-empenhos" hidden></section>
+  <section class="vista" id="v-contratos" hidden></section>
+  <section class="vista" id="v-atas" hidden></section>
+  <section class="vista" id="v-licitacoes" hidden></section>
+  <section class="vista" id="v-rp" hidden></section>
+</main>
+<footer>
+  <div class="in">
+    <img src="/executivo/domdevlabs.png" alt="Logotipo DomDevLabs" width="38" height="38">
+    <span>Desenvolvido por <b>DomDevLabs</b> · <a href="mailto:domdevlabs@gmail.com">domdevlabs@gmail.com</a></span>
+    <span class="esp"></span>
+    <a href="/">Abrir o painel 3D</a>
+    <button type="button" id="tema">Tema: automático</button>
+    <span>v1.0.0</span>
+  </div>
+</footer>
+<div id="aviso" role="status"></div>
+
+<script src="/tools/dados.lib.js"></script>
+<script>
+'use strict';
+const VERSAO='1.0.0';
+const SHEET={id:'19Za-0_spkX6aiCL0e8h-pTljgTLzwSAb8GwBmXxEy3g',gid:{exec:1963592069,ne:892020825,rp:435294578,ct:843442876,ar:57478241,lc:1997489688,sp:1393334488}};
+let EX,NE,RP,CT,AR,LC,SP,SIGLAS={},FONTE='',vistaAtual='';
+
+/* ---------- formatação ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const mi=v=>{ v=v||0; const a=Math.abs(v);
+  if(a>=1e9) return 'R$ '+(v/1e9).toLocaleString('pt-BR',{maximumFractionDigits:2})+' bi';
+  if(a>=1e6) return 'R$ '+(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi';
+  if(a>=1e3) return 'R$ '+Math.round(v/1e3).toLocaleString('pt-BR')+' mil';
+  return brl(v); };
+const miS=v=>mi(v).replace('R$ ','');
+const pct=(a,b)=>b?a/b*100:0;
+const pf=v=>v.toLocaleString('pt-BR',{maximumFractionDigits:v<10?1:0})+'%';
+const int=v=>(v||0).toLocaleString('pt-BR');
+const dtbr=iso=>iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'—';
+const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const hoje=()=>{ const d=new Date(); return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); };
+const dias=iso=>iso?Math.round((Date.UTC(+iso.slice(0,4),+iso.slice(5,7)-1,+iso.slice(8,10))-hoje())/864e5):null;
+const situacao=d=>d===null?['Sem data de fim','neu']:d<0?['Encerrado','neu']:d<=30?['Vence em '+d+(d===1?' dia':' dias'),'bad']:d<=90?['Vence em '+d+' dias','warn']:['Vigente','ok'];
+const FAIXAS=[['30','Vencem em até 30 dias'],['90','Vencem em 31 a 90 dias'],['180','Vencem em 91 a 180 dias'],['365','Vencem em 181 a 365 dias'],['+','Vigentes por mais de 1 ano'],['enc','Encerrados'],['sem','Sem data de fim']];
+const faixa=d=>d===null?'sem':d<0?'enc':d<=30?'30':d<=90?'90':d<=180?'180':d<=365?'365':'+';
+let avisoT; function aviso(msg,erro){ const a=$('#aviso'); a.textContent=msg; a.className='on'+(erro?' err':''); clearTimeout(avisoT); avisoT=setTimeout(()=>a.className='',erro?7000:3500); }
+
+/* ---------- dados ---------- */
+const sigla=c=>(SIGLAS[c]||(EX&&EX.ugs[c])||(NE&&NE.ugs[c])||[c])[0];
+const nomeUG=c=>(SIGLAS[c]||(EX&&EX.ugs[c])||(NE&&NE.ugs[c])||[c,c])[1];
+function soma(rows){ const t={rec:0,disp:0,aliq:0,emliq:0,liqpag:0,pago:0};
+  for(const r of rows){ t.rec+=r[7]+r[8]; t.disp+=r[9]; t.aliq+=r[10]; t.emliq+=r[11]; t.liqpag+=r[12]; t.pago+=r[13]; }
+  t.emp=t.aliq+t.emliq+t.liqpag+t.pago; t.liq=t.liqpag+t.pago; return t; }
+function agrupa(rows,chave){ const m=new Map(); for(const r of rows){ const k=chave(r); (m.get(k)||m.set(k,[]).get(k)).push(r); }
+  return [...m].map(([k,rs])=>({k,...soma(rs)})).sort((a,b)=>b.rec-a.rec); }
+
+async function lerCSV(gid){
+  let erro;
+  for(const tipo of ['export','gviz']){
+    const url=tipo==='export'?`https://docs.google.com/spreadsheets/d/${SHEET.id}/export?format=csv&gid=${gid}`:`https://docs.google.com/spreadsheets/d/${SHEET.id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    try{ const r=await fetch(url+'&_='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status);
+      const t=await r.text(); if(t.length<200||/^\s*<(!doctype|html)/i.test(t)) throw new Error('resposta inválida'); return t; }
+    catch(e){ erro=e; } }
+  throw erro;
+}
+async function lerAoVivo(){
+  const G=SHEET.gid, opc=g=>lerCSV(g).catch(()=>null);
+  const [e,n,rp,ct,ar,lc,sp]=await Promise.all([lerCSV(G.exec),lerCSV(G.ne),opc(G.rp),opc(G.ct),opc(G.ar),opc(G.lc),opc(G.sp)]);
+  const r=CAEData.transformar(e,n,SIGLAS,rp,ct,ar,lc,sp);
+  if(r.ne.rows.length<100||r.ex.rows.length<10) throw new Error('planilha veio incompleta');
+  return r;
+}
+// cópia de reserva: a mesma que o painel 3D guarda embutida (regravada pelo fluxo "Atualizar snapshot de reserva")
+async function lerReserva(){
+  const r=await fetch('/',{cache:'no-cache'}); if(!r.ok) throw new Error('HTTP '+r.status);
+  const h=await r.text(), pega=id=>{ const m=new RegExp(`<script id="${id}" type="application/json">([\\s\\S]*?)<\/script>`).exec(h); return m?JSON.parse(m[1]):null; };
+  const ex=pega('execData'), ne=pega('neData'); if(!ex||!ne) throw new Error('cópia de reserva não encontrada');
+  return {ex,ne,rp:pega('rpData'),ct:pega('ctData'),ar:pega('arData'),lc:pega('lcData'),sp:pega('spData')};
+}
+function aplicar(r,fonte){
+  EX=r.ex; NE=r.ne; RP=r.rp||RP; CT=r.ct||CT; AR=r.ar||AR; LC=r.lc||LC; SP=r.sp||SP;
+  if(EX.siglas) SIGLAS=Object.assign({},EX.siglas,SIGLAS);
+  FONTE=fonte;
+  $('#posicao').textContent=EX.ref||NE.ref||'—';
+  const f=$('#fonte'); f.textContent=fonte==='vivo'?'lido da planilha às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'cópia de reserva';
+  f.className='src'+(fonte==='vivo'?'':' res');
+  $('#carregando').hidden=true;
+  cache={}; mostrar(vistaAtual||rota(),true);
+}
+let atualizando=false;
+async function atualizar(manual){
+  if(atualizando) return; atualizando=true; const b=$('#atualizar'); b.classList.add('spin');
+  try{ const r=await lerAoVivo(); const antes=EX?EX.rows.length+'|'+NE.rows.length+'|'+EX.ref:''; aplicar(r,'vivo');
+    if(manual) aviso(antes===EX.rows.length+'|'+NE.rows.length+'|'+EX.ref?'Os dados já estavam atualizados · posição '+EX.ref:'Dados atualizados · posição '+EX.ref); }
+  catch(e){ console.warn(e);
+    if(!EX){ try{ aplicar(await lerReserva(),'reserva'); aviso('A planilha não respondeu. Exibindo a cópia de reserva de '+EX.ref+'.',true); }
+      catch(e2){ $('#carregando').textContent='Não foi possível ler a planilha nem a cópia de reserva. Verifique a conexão e toque em Atualizar.'; } }
+    else aviso('A planilha não respondeu agora. Os dados de '+EX.ref+' continuam na tela.',true); }
+  finally{ atualizando=false; b.classList.remove('spin'); }
+}
+
+/* ---------- navegação ---------- */
+const VISTAS={geral:vGeral,orcamento:vOrcamento,empenhos:vEmpenhos,contratos:vContratos,atas:vAtas,licitacoes:vLicitacoes,rp:vRP};
+let cache={};
+const rota=()=>{ const h=location.hash.slice(1); return VISTAS[h]?h:'geral'; };
+function mostrar(v,forcar){
+  vistaAtual=v;
+  document.querySelectorAll('nav.abas a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+v?'page':'false'));
+  document.querySelectorAll('.vista').forEach(s=>s.hidden=s.id!=='v-'+v);
+  if(!EX) return;
+  const el=$('#v-'+v); if(forcar||!cache[v]){ VISTAS[v](el); cache[v]=1; }
+  document.title='CAE · '+$('nav.abas a[href="#'+v+'"]').textContent;
+}
+addEventListener('hashchange',()=>{ mostrar(rota()); scrollTo(0,0); });
+
+/* ---------- componentes ---------- */
+const ind=l=>`<div class="ind">${l.map(x=>`<div><div class="k">${esc(x.k)}</div><div class="v">${x.v}</div>${x.s?`<div class="s">${esc(x.s)}</div>`:''}</div>`).join('')}</div>`;
+function colunasMes(serie,{alt=200,rot='',fmt=v=>int(v),fmtTopo=null}={}){ // serie: [{r:'jan',v,t?}] em HTML (texto nítido em qualquer largura)
+  const max=Math.max(1,...serie.map(o=>o.v));
+  return `<div class="cols" role="img" aria-label="${esc(rot)}" style="--alt:${alt}px">`+serie.map(o=>`<div class="col" title="${esc((o.t||o.r)+': '+fmt(o.v))}"><span class="cv">${o.v?esc((fmtTopo||fmt)(o.v)):''}</span><i style="height:${o.v?Math.max(2,o.v/max*alt).toFixed(1):0}px"></i><span class="cr">${esc(o.r)}</span></div>`).join('')+'</div>';
+}
+function barras(lista,{rot1='',rot2='',tot=null}){ // lista: {n,a,b,v}
+  const max=Math.max(1,...lista.map(x=>x.a));
+  return `<p class="chave"><span style="--c:var(--ceu)">${esc(rot1)}</span><span style="--c:var(--azul)">${esc(rot2)}</span></p><div class="barras">`+
+    lista.map(x=>`<span class="n" title="${esc(x.title||x.n)}">${esc(x.n)}</span><span class="t"><i style="width:${pct(x.a,max)}%"></i><i class="p" style="width:${pct(x.b,max)}%"></i></span><span class="v">${esc(x.v)}</span>`).join('')+'</div>';
+}
+function tabela(el,{cols,linhas,chave,ordem,dir=-1,limite=60,detalhe=null,rodape=null,vazio='Nada encontrado com esses filtros.'}){
+  // cols: [{t,k:valor p/ ordenar,h:html,num}]
+  let o=ordem, d=dir, lim=limite, aberto=null;
+  function render(){
+    const ls=[...linhas]; if(o!=null){ const c=cols[o]; ls.sort((a,b)=>{ const x=c.k(a), y=c.k(b); return (x<y?-1:x>y?1:0)*d; }); }
+    if(!ls.length){ el.innerHTML=`<div class="tw"><div class="vazio">${esc(vazio)}</div></div>`; return; }
+    let h=`<div class="tw"><table><thead><tr>${cols.map((c,i)=>`<th${c.num?' class="num"':''} data-s="${i}" scope="col"${o===i?` aria-sort="${d<0?'descending':'ascending'}"`:''}>${esc(c.t)}</th>`).join('')}</tr></thead><tbody>`;
+    for(const r of ls.slice(0,lim)){ const id=chave(r);
+      h+=`<tr${detalhe?` class="clic" data-id="${esc(id)}" tabindex="0" aria-expanded="${aberto===id}"`:''}>${cols.map(c=>`<td${c.num?' class="num"':c.cls?` class="${c.cls}"`:''}>${c.h(r)}</td>`).join('')}</tr>`;
+      if(detalhe&&aberto===id) h+=`<tr class="det"><td colspan="${cols.length}">${detalhe(r)}</td></tr>`; }
+    h+=`</tbody>${rodape?`<tfoot><tr>${rodape(ls)}</tr></tfoot>`:''}</table></div>`;
+    if(ls.length>lim) h+=`<button class="mais" type="button">Mostrar mais ${int(Math.min(100,ls.length-lim))} de ${int(ls.length-lim)} restantes</button>`;
+    el.innerHTML=h;
+    el.querySelectorAll('th[data-s]').forEach(th=>th.onclick=()=>{ const i=+th.dataset.s; if(o===i) d=-d; else { o=i; d=cols[i].num?-1:1; } render(); });
+    const m=el.querySelector('.mais'); if(m) m.onclick=()=>{ lim+=100; render(); };
+    if(detalhe) el.querySelectorAll('tr.clic').forEach(tr=>{ const f=()=>{ aberto=aberto===tr.dataset.id?null:tr.dataset.id; render(); };
+      tr.onclick=f; tr.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); f(); } }; });
+  }
+  render();
+}
+const ficha=pares=>`<dl class="ficha">${pares.filter(p=>p[1]!==''&&p[1]!=null).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
+const opcoes=(lista,sel,todos)=>`<option value="">${esc(todos)}</option>`+lista.map(v=>`<option${v===sel?' selected':''}>${esc(v)}</option>`).join('');
+
+/* ---------- vencimentos (contratos + atas) ---------- */
+function vencimentos(limite){
+  const l=[];
+  if(CT) for(const r of CT.rows){ const d=dias(r[12]); if(d!==null&&d>=0&&d<=limite) l.push({d,tipo:'Contrato',num:r[0],obj:r[5],forn:r[8],v:r[14],fim:r[12]}); }
+  if(AR) for(const r of AR.rows){ const d=dias(r[8]); if(d!==null&&d>=0&&d<=limite) l.push({d,tipo:'Ata',num:r[0],obj:r[2],forn:r[3],v:r[9],fim:r[8]}); }
+  return l.sort((a,b)=>a.d-b.d||(b.v||0)-(a.v||0));
+}
+const cx=t=>{ t=String(t||'').trim(); return t.length>1&&t===t.toUpperCase()?t.charAt(0)+t.slice(1).toLowerCase():t; };
+
+/* ================= VISÃO GERAL ================= */
+function vGeral(el){
+  const T=soma(EX.rows);
+  const seg=[['Pago',T.pago,'var(--azul)','pago ao fornecedor'],['Liquidado a pagar',T.liqpag,'var(--azul2)','entregue, aguardando pagamento'],['Em liquidação',T.emliq,'#7FA2CF','em conferência'],['A liquidar',T.aliq,'var(--ceu)','empenhado, sem entrega'],['Disponível',T.disp,'var(--disp)','crédito livre']];
+  let acc=0; const marcas=[0,25,50,75,100].map(p=>`<span style="left:${p}%">${p}%</span>`).join('');
+  const faixa=seg.map(([n,v,c])=>{ const w=pct(v,T.rec); acc+=w; return `<i style="width:${w}%;background:${c}" title="${esc(n)}: ${esc(brl(v))} (${pf(w)})"></i>`; }).join('');
+  // por Grande Comando
+  const gcs=agrupa(EX.rows,r=>EX.t.gc[r[1]]).filter(g=>g.rec>0).slice(0,10);
+  const venc=vencimentos(90);
+  const ctV=CT?CT.rows.filter(r=>{ const d=dias(r[12]); return r[1]==='DESPESA'&&d!==null&&d>=0; }):[];
+  const arV=AR?AR.rows.filter(r=>{ const d=dias(r[8]); return d!==null&&d>=0; }):[];
+  const lcAnd=LC?LC.rows.filter(r=>!['NÃO INICIADO','HOMOLOGADO','REVOGADO','ARQUIVADO','SUSPENSO','EXECUÇÃO CONTRATUAL',''].includes(r[0])):[];
+  const rpS=RP?RP.rows.map(r=>r[r.length-1]):[];
+  const spark=(v)=>{ if(v.length<2) return ''; const W=180,H=34,mx=Math.max(...v),mn=0; const pts=v.map((x,i)=>`${(i/(v.length-1)*W).toFixed(1)},${(H-2-(x-mn)/(mx-mn||1)*(H-6)).toFixed(1)}`).join(' ');
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--azul)" stroke-width="2" stroke-linejoin="round"/></svg>`; };
+  el.innerHTML=`
+  <div class="painel pista">
+    <div class="cab">
+      <div><p class="rot">Crédito recebido pelas UGs atendidas pelo CAE em ${esc((EX.ref||'').slice(-4)||'2026')}</p><p class="total"><small>R$</small>${esc(miS(T.rec))}</p></div>
+      <div class="taxas">
+        <div class="taxa"><b>${pf(pct(T.emp,T.rec))}</b><span>empenhado</span></div>
+        <div class="taxa"><b>${pf(pct(T.liq,T.rec))}</b><span>liquidado</span></div>
+        <div class="taxa"><b>${pf(pct(T.pago,T.rec))}</b><span>pago</span></div>
+      </div>
+    </div>
+    <div class="faixa" role="img" aria-label="Distribuição do crédito recebido por estágio da despesa">${faixa}</div>
+    <div class="marcas" aria-hidden="true">${marcas}</div>
+    <div class="legenda">${seg.map(([n,v,c,s])=>`<div style="--c:${c}"><span>${esc(n)}</span><b>${esc(mi(v))}</b><em>${pf(pct(v,T.rec))} · ${esc(s)}</em></div>`).join('')}</div>
+  </div>
+  <div class="grade g2" style="margin-top:20px">
+    <div class="painel"><h3>Crédito por Grande Comando</h3>
+      ${barras(gcs.map(g=>({n:g.k,a:g.rec,b:g.pago,v:mi(g.rec),title:`${g.k}: recebido ${brl(g.rec)}, pago ${brl(g.pago)} (${pf(pct(g.pago,g.rec))})`})),{rot1:'Recebido',rot2:'Pago'})}
+      <p class="nota">Detalhe por UG e natureza de despesa em <a href="#orcamento">Orçamento</a>.</p>
+    </div>
+    <div class="painel"><h3>Vencem nos próximos 90 dias</h3>
+      ${venc.length?`<ul class="venc">${venc.slice(0,6).map(x=>`<li><div class="dias${x.d<=30?' urg':''}">${x.d===0?'hoje<small>&nbsp;</small>':x.d+'<small>'+(x.d===1?'dia':'dias')+'</small>'}</div><div><div class="o">${esc(cx(x.obj))}</div><div class="m">${x.tipo} ${esc(x.num)} · ${esc(x.forn)} · ${esc(mi(x.v))} · fim ${dtbr(x.fim)}</div></div></li>`).join('')}</ul>
+      <p class="nota">${int(venc.length)} instrumentos no total: ${int(venc.filter(x=>x.tipo==='Contrato').length)} contratos e ${int(venc.filter(x=>x.tipo==='Ata').length)} atas. Ver <a href="#contratos">contratos</a> e <a href="#atas">atas</a>.</p>`:'<p class="vazio">Nenhum contrato ou ata vence nos próximos 90 dias.</p>'}
+    </div>
+  </div>
+  <div class="resumo" style="margin-top:20px">
+    <a href="#contratos"><div class="k">Contratos de despesa vigentes</div><div class="v">${int(ctV.length)}</div><div class="s">${esc(mi(ctV.reduce((a,r)=>a+(r[14]||0),0)))} em valor global</div></a>
+    <a href="#atas"><div class="k">Atas de registro vigentes</div><div class="v">${int(arV.length)}</div><div class="s">${esc(mi(arV.reduce((a,r)=>a+(r[9]||0),0)))} registrados</div></a>
+    <a href="#licitacoes"><div class="k">Contratações em andamento</div><div class="v">${int(lcAnd.length)}</div><div class="s">${LC?int(LC.rows.filter(r=>r[0]==='HOMOLOGADO').length)+' homologadas no PCA':'aba Gerencial indisponível'}</div></a>
+    <a href="#rp"><div class="k">Saldo de restos a pagar</div><div class="v">${rpS.length?esc(mi(rpS[rpS.length-1])):'—'}</div><div class="s">${rpS.length?'em '+esc(RP.meses[RP.meses.length-1].toLowerCase())+', era '+esc(mi(rpS[0]))+' em jan':''}</div>${spark(rpS)}</a>
+  </div>
+  <p class="nota">Valores de empenho a pagamento são da aba Execução da planilha-banco (Tesouro Gerencial). Contratos e atas consideram a data de fim da vigência registrada.</p>`;
+}
+
+/* ================= ORÇAMENTO ================= */
+const fO={gc:'',ug:'',vis:'ug'};
+function vOrcamento(el){
+  const gcs=[...new Set(EX.rows.map(r=>EX.t.gc[r[1]]))];
+  el.innerHTML=`<h2 class="tit">Execução orçamentária</h2><p class="lede">Do crédito recebido ao pagamento, por unidade gestora responsável e por natureza de despesa. Toque no cabeçalho de uma coluna para ordenar.</p>
+  <div id="oInd"></div>
+  <div class="filtros">
+    <label>Grande Comando<select id="oGc">${opcoes(gcs,fO.gc,'Todos')}</select></label>
+    <label>Unidade gestora<input type="search" id="oUg" placeholder="Sigla ou código, ex.: HFAG" value="${esc(fO.ug)}"></label>
+    <label>Agrupar por<select id="oVis"><option value="ug"${fO.vis==='ug'?' selected':''}>Unidade gestora</option><option value="nd"${fO.vis==='nd'?' selected':''}>Natureza de despesa</option><option value="pi"${fO.vis==='pi'?' selected':''}>Plano interno</option><option value="acao"${fO.vis==='acao'?' selected':''}>Ação de governo</option></select></label>
+    <button class="limpar" id="oLimpar" type="button">Limpar filtros</button>
+  </div>
+  <div id="oTab"></div>`;
+  const go=()=>{ const q=norm(fO.ug).trim();
+    const rows=EX.rows.filter(r=>(!fO.gc||EX.t.gc[r[1]]===fO.gc)&&(!q||norm(sigla(r[0])).includes(q)||r[0].startsWith(q)||norm(nomeUG(r[0])).includes(q)));
+    const T=soma(rows);
+    $('#oInd').innerHTML=ind([{k:'Recebido',v:esc(mi(T.rec)),s:brl(T.rec)},{k:'Empenhado',v:esc(mi(T.emp)),s:pf(pct(T.emp,T.rec))+' do recebido'},{k:'Liquidado',v:esc(mi(T.liq)),s:pf(pct(T.liq,T.rec))+' do recebido'},{k:'Pago',v:esc(mi(T.pago)),s:pf(pct(T.pago,T.rec))+' do recebido'},{k:'Disponível',v:esc(mi(T.disp)),s:'crédito ainda não empenhado'}]);
+    const chave={ug:r=>r[0],nd:r=>r[6],pi:r=>r[5],acao:r=>r[3]}[fO.vis];
+    const nome={ug:k=>[sigla(k),nomeUG(k)],nd:k=>EX.t.nd[k],pi:k=>{ const p=EX.t.pi[k]; const s=SP&&SP.pi[p[0]]; return [p[0],(p[1]||'')+(s?' · '+s:'')]; },acao:k=>EX.t.acao[k]}[fO.vis];
+    const gr=agrupa(rows,chave), col0={ug:'Unidade gestora',nd:'Natureza de despesa',pi:'Plano interno',acao:'Ação de governo'}[fO.vis];
+    tabela($('#oTab'),{chave:g=>String(g.k),ordem:1,linhas:gr,limite:80,cols:[
+      {t:col0,k:g=>norm(nome(g.k)[0]),h:g=>{ const [a,b]=nome(g.k); return `<b>${esc(a)}</b><span class="sub">${esc(cx(b))}</span>`; }},
+      {t:'Recebido',num:1,k:g=>g.rec,h:g=>esc(brl(g.rec))},
+      {t:'Empenhado',num:1,k:g=>g.emp,h:g=>esc(brl(g.emp))},
+      {t:'% empenhado',num:1,k:g=>pct(g.emp,g.rec),h:g=>`${pf(pct(g.emp,g.rec))}<span class="mini"><i style="width:${Math.min(100,pct(g.emp,g.rec))}%"></i></span>`},
+      {t:'Pago',num:1,k:g=>g.pago,h:g=>esc(brl(g.pago))},
+      {t:'Disponível',num:1,k:g=>g.disp,h:g=>esc(brl(g.disp))}],
+      rodape:ls=>{ const t=ls.reduce((a,g)=>({rec:a.rec+g.rec,emp:a.emp+g.emp,pago:a.pago+g.pago,disp:a.disp+g.disp}),{rec:0,emp:0,pago:0,disp:0});
+        return `<td>Total (${int(ls.length)})</td><td class="num">${esc(brl(t.rec))}</td><td class="num">${esc(brl(t.emp))}</td><td class="num">${pf(pct(t.emp,t.rec))}</td><td class="num">${esc(brl(t.pago))}</td><td class="num">${esc(brl(t.disp))}</td>`; }});
+  };
+  $('#oGc').onchange=e=>{ fO.gc=e.target.value; go(); };
+  $('#oUg').oninput=e=>{ fO.ug=e.target.value; go(); };
+  $('#oVis').onchange=e=>{ fO.vis=e.target.value; go(); };
+  $('#oLimpar').onclick=()=>{ fO.gc='';fO.ug='';fO.vis='ug'; vOrcamento(el); };
+  go();
+}
+
+/* ================= EMPENHOS ================= */
+const fE={q:'',ug:'',mes:''};
+function vEmpenhos(el){
+  const ano=(NE.ref||'').slice(-4)||String(new Date().getFullYear());
+  const meses=[...new Set(NE.rows.map(r=>r[0].slice(0,7)))].filter(Boolean).sort().reverse();
+  el.innerHTML=`<h2 class="tit">Notas de empenho</h2><p class="lede">Uma linha por nota de empenho emitida. Pesquise por número, fornecedor, CNPJ, processo ou descrição. Toque numa nota para ver a ficha completa.</p>
+  <div id="eInd"></div>
+  <div class="painel" style="margin-bottom:20px"><h3>Empenhado por mês em ${esc(ano)}</h3><div id="eGr"></div></div>
+  <div class="filtros">
+    <label>Pesquisar<input type="search" id="eQ" placeholder="NE, fornecedor, CNPJ, processo…" value="${esc(fE.q)}"></label>
+    <label>Unidade gestora<input type="search" id="eUg" placeholder="Sigla, ex.: PAME" value="${esc(fE.ug)}"></label>
+    <label>Mês de emissão<select id="eMes"><option value="">Todos</option>${meses.map(m=>`<option value="${m}"${m===fE.mes?' selected':''}>${MES[+m.slice(5)-1]}/${m.slice(0,4)}</option>`).join('')}</select></label>
+    <button class="limpar" id="eLimpar" type="button">Limpar filtros</button>
+  </div>
+  <div id="eTab"></div>`;
+  const forn=r=>NE.t.forn[r[13]]||['',''];
+  const ugc=r=>NE.t.ugr[r[2]];
+  const go=()=>{ const q=norm(fE.q).trim(), u=norm(fE.ug).trim();
+    const rows=NE.rows.filter(r=>{ if(fE.mes&&r[0].slice(0,7)!==fE.mes) return false;
+      if(u&&!(norm(sigla(ugc(r))).includes(u)||ugc(r).startsWith(u))) return false;
+      if(!q) return true; const f=forn(r); return norm([r[1],f[0],f[1],r[15],r[8]].join(' ')).includes(q)||(/^\d+$/.test(q)&&r[1].endsWith(q.padStart(6,'0'))); });
+    const tot=rows.reduce((a,r)=>a+r[9],0), sl=rows.reduce((a,r)=>{ for(const l of r[17]){ a.pago+=l[4]; a.aliq+=l[1]; } return a; },{pago:0,aliq:0});
+    $('#eInd').innerHTML=ind([{k:'Notas de empenho',v:int(rows.length),s:'emitidas'},{k:'Valor empenhado',v:esc(mi(tot)),s:brl(tot)},{k:'Já pago',v:esc(mi(sl.pago)),s:pf(pct(sl.pago,tot))+' do empenhado'},{k:'Ainda a liquidar',v:esc(mi(sl.aliq)),s:'sem entrega registrada'},{k:'Fornecedores',v:int(new Set(rows.map(r=>forn(r)[0])).size),s:'CNPJ/CPF distintos'}]);
+    const s=Array.from({length:12},(_,i)=>({r:MES[i],v:0,n:0}));
+    for(const r of rows) if(r[0].startsWith(ano)){ const m=+r[0].slice(5,7)-1; s[m].v+=r[9]; s[m].n++; }
+    const ult=Math.max(0,...s.map((o,i)=>o.n?i:0));
+    $('#eGr').innerHTML=colunasMes(s.slice(0,ult+1).map((o,i)=>({...o,t:`${MES[i]}/${ano} · ${int(o.n)} NE`})),{rot:'Valor empenhado por mês',fmt:v=>brl(v),fmtTopo:v=>miS(v)});
+    tabela($('#eTab'),{chave:r=>r[1],linhas:rows,ordem:0,limite:50,cols:[
+      {t:'Emissão',k:r=>r[0],h:r=>dtbr(r[0])},
+      {t:'Nota de empenho',k:r=>r[1],h:r=>`<b>${esc(r[1])}</b><span class="sub">${esc(sigla(ugc(r)))}</span>`},
+      {t:'Fornecedor e descrição',cls:'obj',k:r=>norm(forn(r)[1]),h:r=>`${esc(forn(r)[1]||'—')}<span class="sub">${esc(r[8])}</span>`},
+      {t:'Valor',num:1,k:r=>r[9],h:r=>esc(brl(r[9]))},
+      {t:'Pago',num:1,k:r=>r[17].reduce((a,l)=>a+l[4],0),h:r=>{ const p=r[17].reduce((a,l)=>a+l[4],0); return `${pf(pct(p,r[9]))}<span class="mini"><i style="width:${Math.min(100,pct(p,r[9]))}%"></i></span>`; }}],
+      detalhe:r=>{ const f=forn(r), L=r[17].reduce((a,l)=>{ for(let i=0;i<5;i++) a[i]+=l[i]; return a; },[0,0,0,0,0]), nd=NE.t.nd[r[7]]||[], pi=NE.t.pi[r[6]]||[], fo=NE.t.fonte[r[5]]||[], ac=NE.t.acao[r[11]]||[];
+        return ficha([['Unidade gestora',esc(sigla(ugc(r))+' · '+nomeUG(ugc(r)))],['Grande Comando',esc(NE.t.gc[r[3]])],['Fornecedor',esc(f[1])+'<br>'+esc(f[0])],['Local',esc([f[3],f[4]].filter(Boolean).join(' / '))],
+          ['Natureza de despesa',esc(nd.join(' · '))],['Plano interno',esc(pi.join(' · '))],['Fonte',esc(fo.join(' · '))],['Ação de governo',esc(ac.join(' · '))],['PTRES',esc(NE.t.ptres[r[4]])],
+          ['Processo',esc(r[15])],['Licitação',esc(NE.t.lic[r[16]])],['Amparo legal',esc(NE.t.amparo[r[14]])],
+          ['A liquidar',esc(brl(L[1]))],['Em liquidação',esc(brl(L[2]))],['Liquidado a pagar',esc(brl(L[3]))],['Pago',esc(brl(L[4]))]]); }});
+  };
+  let t; const deb=f=>{ clearTimeout(t); t=setTimeout(f,180); };
+  $('#eQ').oninput=e=>{ fE.q=e.target.value; deb(go); };
+  $('#eUg').oninput=e=>{ fE.ug=e.target.value; deb(go); };
+  $('#eMes').onchange=e=>{ fE.mes=e.target.value; go(); };
+  $('#eLimpar').onclick=()=>{ fE.q='';fE.ug='';fE.mes=''; vEmpenhos(el); };
+  go();
+}
+
+/* ================= CONTRATOS ================= */
+const fC={q:'',faixa:'vig',cat:'',tipo:'DESPESA'};
+function vContratos(el){
+  if(!CT){ el.innerHTML='<h2 class="tit">Contratos</h2><p class="lede">A aba de contratos não respondeu. Toque em Atualizar para tentar de novo.</p>'; return; }
+  const cats=[...new Set(CT.rows.map(r=>r[7]).filter(Boolean))].sort();
+  el.innerHTML=`<h2 class="tit">Contratos</h2><p class="lede">Contratos publicados pelo CAE, com a situação calculada pela data de fim da vigência. Planilha atualizada em ${esc(CT.ref||'—')}.</p>
+  <div id="cInd"></div>
+  <div class="painel" style="margin-bottom:20px"><h3>Fim de vigência dos contratos vigentes</h3><div id="cGr"></div></div>
+  <div class="filtros">
+    <label>Pesquisar<input type="search" id="cQ" placeholder="Número, objeto, fornecedor, CNPJ, processo…" value="${esc(fC.q)}"></label>
+    <label>Situação<select id="cF"><option value="vig"${fC.faixa==='vig'?' selected':''}>Vigentes</option>${FAIXAS.map(([k,n])=>`<option value="${k}"${fC.faixa===k?' selected':''}>${esc(n)}</option>`).join('')}<option value=""${fC.faixa===''?' selected':''}>Todos</option></select></label>
+    <label>Categoria<select id="cCat">${opcoes(cats,fC.cat,'Todas')}</select></label>
+    <label>Tipo<select id="cTipo"><option value="DESPESA"${fC.tipo==='DESPESA'?' selected':''}>Despesa</option><option value="RECEITA"${fC.tipo==='RECEITA'?' selected':''}>Receita</option><option value=""${fC.tipo===''?' selected':''}>Ambos</option></select></label>
+    <button class="limpar" id="cLimpar" type="button">Limpar filtros</button>
+  </div>
+  <div id="cTab"></div>`;
+  const go=()=>{ const q=norm(fC.q).trim();
+    const rows=CT.rows.filter(r=>{ const d=dias(r[12]), f=faixa(d);
+      if(fC.faixa==='vig'&&(f==='enc')) return false; if(fC.faixa&&fC.faixa!=='vig'&&f!==fC.faixa) return false;
+      if(fC.cat&&r[7]!==fC.cat) return false; if(fC.tipo&&r[1]!==fC.tipo) return false;
+      return !q||norm([r[0],r[2],r[4],r[5],r[7],r[8],r[9],r[18]].join(' ')).includes(q); });
+    const vg=rows.reduce((a,r)=>a+(r[14]||0),0), n30=rows.filter(r=>{ const d=dias(r[12]); return d!==null&&d>=0&&d<=30; }).length, n90=rows.filter(r=>{ const d=dias(r[12]); return d!==null&&d>=0&&d<=90; }).length;
+    $('#cInd').innerHTML=ind([{k:'Contratos',v:int(rows.length),s:'com os filtros atuais'},{k:'Valor global',v:esc(mi(vg)),s:brl(vg)},{k:'Fornecedores',v:int(new Set(rows.map(r=>r[9]||r[8])).size),s:'distintos'},{k:'Vencem em 30 dias',v:int(n30),s:int(n90)+' em até 90 dias'}]);
+    // gráfico: próximos 12 meses
+    const hj=new Date(), s=[]; for(let i=0;i<12;i++){ const d=new Date(hj.getFullYear(),hj.getMonth()+i,1); s.push({k:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),r:MES[d.getMonth()]+(d.getMonth()===0||i===0?'/'+String(d.getFullYear()).slice(2):''),v:0,val:0}); }
+    for(const r of CT.rows){ if(fC.tipo&&r[1]!==fC.tipo) continue; if(fC.cat&&r[7]!==fC.cat) continue; const d=dias(r[12]); if(d===null||d<0) continue; const o=s.find(x=>x.k===(r[12]||'').slice(0,7)); if(o){ o.v++; o.val+=r[14]||0; } }
+    $('#cGr').innerHTML=colunasMes(s.map(o=>({...o,t:`${o.r}: ${o.v} contrato(s), ${mi(o.val)}`})),{rot:'Contratos por mês de fim de vigência',alt:190})+'<p class="nota">Quantidade de contratos cujo fim de vigência cai em cada um dos próximos 12 meses.</p>';
+    tabela($('#cTab'),{chave:r=>r[0]+r[20],linhas:rows,ordem:3,dir:1,limite:50,cols:[
+      {t:'Contrato',k:r=>r[0],h:r=>`<b>${esc(r[0])}</b><span class="sub">${esc(r[3])}${r[2]?' '+esc(r[2]):''}</span>`},
+      {t:'Objeto e fornecedor',cls:'obj',k:r=>norm(r[5]),h:r=>`${esc(cx(r[5]))}<span class="sub">${esc(r[8])}</span>`},
+      {t:'Valor global',num:1,k:r=>r[14]||0,h:r=>esc(r[14]==null?'—':brl(r[14]))},
+      {t:'Fim da vigência',k:r=>r[12]||'9999',h:r=>{ const [t,c]=situacao(dias(r[12])); return `${dtbr(r[12])}<span class="sub"><span class="selo ${c}">${esc(t)}</span></span>`; }}],
+      detalhe:r=>ficha([['Tipo',esc(cx(r[1]))],['Categoria',esc(r[7])],['Modalidade',esc(r[3])],['Compra',esc(r[2])],['Processo',esc(r[4])],['CNPJ/CPF',esc(r[9])],['Assinatura',dtbr(r[10])],['Início da vigência',dtbr(r[11])],['Fim da vigência',dtbr(r[12])],
+        ['Valor inicial',esc(r[13]==null?'—':brl(r[13]))],['Valor acumulado',esc(r[15]==null?'—':brl(r[15]))],['Parcelas',esc(r[16])],['Unidades requisitantes',esc(r[18])],['Controle PNCP',esc(r[20])],['Informações complementares',esc(r[6])]])});
+  };
+  let t; const deb=f=>{ clearTimeout(t); t=setTimeout(f,180); };
+  $('#cQ').oninput=e=>{ fC.q=e.target.value; deb(go); };
+  $('#cF').onchange=e=>{ fC.faixa=e.target.value; go(); };
+  $('#cCat').onchange=e=>{ fC.cat=e.target.value; go(); };
+  $('#cTipo').onchange=e=>{ fC.tipo=e.target.value; go(); };
+  $('#cLimpar').onclick=()=>{ Object.assign(fC,{q:'',faixa:'vig',cat:'',tipo:'DESPESA'}); vContratos(el); };
+  go();
+}
+
+/* ================= ATAS ================= */
+const fA={q:'',faixa:'vig',unid:''};
+function vAtas(el){
+  if(!AR){ el.innerHTML='<h2 class="tit">Atas de registro de preços</h2><p class="lede">A aba de atas não respondeu. Toque em Atualizar para tentar de novo.</p>'; return; }
+  const unids=[...new Set(AR.rows.map(r=>r[18]).filter(u=>u&&u!=='NÃO LOCALIZADO'))].sort();
+  el.innerHTML=`<h2 class="tit">Atas de registro de preços</h2><p class="lede">Atas geradas pelos pregões do CAE e a vigência de cada uma. Planilha atualizada em ${esc(AR.ref||'—')}.</p>
+  <div id="aInd"></div>
+  <div class="filtros">
+    <label>Pesquisar<input type="search" id="aQ" placeholder="Ata, pregão, objeto, item, fornecedor…" value="${esc(fA.q)}"></label>
+    <label>Situação<select id="aF"><option value="vig"${fA.faixa==='vig'?' selected':''}>Vigentes</option>${FAIXAS.map(([k,n])=>`<option value="${k}"${fA.faixa===k?' selected':''}>${esc(n.replace('Encerrados','Encerradas'))}</option>`).join('')}<option value=""${fA.faixa===''?' selected':''}>Todas</option></select></label>
+    ${unids.length?`<label>Unidade apoiada<select id="aU">${opcoes(unids,fA.unid,'Todas')}</select></label>`:''}
+    <button class="limpar" id="aLimpar" type="button">Limpar filtros</button>
+  </div>
+  <div id="aTab"></div>`;
+  const go=()=>{ const q=norm(fA.q).trim();
+    const rows=AR.rows.filter(r=>{ const f=faixa(dias(r[8]));
+      if(fA.faixa==='vig'&&f==='enc') return false; if(fA.faixa&&fA.faixa!=='vig'&&f!==fA.faixa) return false;
+      if(fA.unid&&r[18]!==fA.unid) return false;
+      return !q||norm([r[0],r[1],r[2],r[3],r[4],r[11],r[15],r[16]].join(' ')).includes(q); });
+    const v=rows.reduce((a,r)=>a+(r[9]||0),0), n90=rows.filter(r=>{ const d=dias(r[8]); return d!==null&&d>=0&&d<=90; }).length;
+    $('#aInd').innerHTML=ind([{k:'Atas',v:int(rows.length),s:'com os filtros atuais'},{k:'Pregões',v:int(new Set(rows.map(r=>r[1])).size),s:'distintos'},{k:'Valor registrado',v:esc(mi(v)),s:brl(v)},{k:'Vencem em 90 dias',v:int(n90),s:'contando de hoje'}]);
+    tabela($('#aTab'),{chave:r=>r[0]+r[12],linhas:rows,ordem:3,dir:1,limite:50,cols:[
+      {t:'Ata',k:r=>r[0],h:r=>`<b>${esc(r[0])}</b><span class="sub">Pregão ${esc(r[1])}</span>`},
+      {t:'Objeto e fornecedor',cls:'obj',k:r=>norm(r[2]),h:r=>`${esc(r[2])}<span class="sub">${esc(r[3])}</span>`},
+      {t:'Valor registrado',num:1,k:r=>r[9]||0,h:r=>esc(r[9]==null?'—':brl(r[9]))},
+      {t:'Fim da vigência',k:r=>r[8]||'9999',h:r=>{ const [t,c]=situacao(dias(r[8])); return `${dtbr(r[8])}<span class="sub"><span class="selo ${c}">${esc(t.replace('Encerrado','Encerrada'))}</span></span>`; }}],
+      detalhe:r=>ficha([['CNPJ',esc(r[4])],['Assinatura',dtbr(r[6])],['Início da vigência',dtbr(r[7])],['Quantidade de itens',esc(r[10])],['Agente de contratação',esc(r[15])],['Unidade apoiada',esc(r[18])],['Controle PNCP',esc(r[12])],['Itens',esc(r[11]).slice(0,600)]])});
+  };
+  let t; const deb=f=>{ clearTimeout(t); t=setTimeout(f,180); };
+  $('#aQ').oninput=e=>{ fA.q=e.target.value; deb(go); };
+  $('#aF').onchange=e=>{ fA.faixa=e.target.value; go(); };
+  if($('#aU')) $('#aU').onchange=e=>{ fA.unid=e.target.value; go(); };
+  $('#aLimpar').onclick=()=>{ Object.assign(fA,{q:'',faixa:'vig',unid:''}); vAtas(el); };
+  go();
+}
+
+/* ================= LICITAÇÕES ================= */
+const ETAPAS=['NÃO INICIADO','FASE INTERNA','CONFERÊNCIA PRELIMINAR','ADEQUAÇÃO PROCESSUAL - UApd','ADEQUAÇÃO PROCESSUAL - CAE','ANÁLISE JURÍDICA','AGUARDANDO AUTORIZAÇÃO DE DESPESA','AGUARDANDO ABERTURA DA SESSÃO PÚBLICA','SELEÇÃO DE FORNECEDORES','HOMOLOGADO','EXECUÇÃO CONTRATUAL'];
+const fL={q:'',status:'',area:''};
+const rotEtapa=s=>{ s=String(s||'sem status').toLowerCase(); s=s.charAt(0).toUpperCase()+s.slice(1); return s.replace(/uapd/i,'UApd').replace(/ cae\b/,' CAE').replace(/^Tod$/,'TOD').replace(/ - /,' · '); };
+function vLicitacoes(el){
+  if(!LC){ el.innerHTML='<h2 class="tit">Licitações</h2><p class="lede">A aba Gerencial não respondeu. Toque em Atualizar para tentar de novo.</p>'; return; }
+  const cont=new Map(); for(const r of LC.rows) cont.set(r[0]||'(sem status)',(cont.get(r[0]||'(sem status)')||0)+1);
+  const fora=[...cont.keys()].filter(k=>!ETAPAS.includes(k)).sort((a,b)=>cont.get(b)-cont.get(a));
+  const max=Math.max(1,...cont.values());
+  const areas=[...new Set(LC.rows.map(r=>r[5]).filter(Boolean))].sort();
+  const li=(s,f)=>`<li class="${f?'fora ':''}${fL.status===s?'on':''}" data-s="${esc(s)}" tabindex="0" role="button" aria-pressed="${fL.status===s}"><span>${esc(rotEtapa(s))}</span><span class="t"><i style="width:${pct(cont.get(s)||0,max)}%"></i></span><b>${int(cont.get(s)||0)}</b></li>`;
+  el.innerHTML=`<h2 class="tit">Licitações do PCA</h2><p class="lede">Cada contratação do Plano de Contratações Anual e a etapa em que está. Toque numa etapa para listar só as contratações dela.</p>
+  <div id="lInd"></div>
+  <div class="painel" style="margin-bottom:20px"><h3>Contratações por etapa</h3>
+    <ol class="etapas">${ETAPAS.map(s=>li(s,false)).join('')}</ol>
+    ${fora.length?`<p class="nota" style="margin:14px 0 6px">Fora do fluxo</p><ul class="etapas">${fora.map(s=>li(s,true)).join('')}</ul>`:''}
+  </div>
+  <div class="filtros">
+    <label>Pesquisar<input type="search" id="lQ" placeholder="Objeto, DFD, número da contratação, agente…" value="${esc(fL.q)}"></label>
+    <label>Área demandante<select id="lA">${opcoes(areas,fL.area,'Todas')}</select></label>
+    <button class="limpar" id="lLimpar" type="button">Limpar filtros</button>
+  </div>
+  <div id="lTab"></div>`;
+  const go=()=>{ const q=norm(fL.q).trim();
+    const rows=LC.rows.filter(r=>(!fL.status||(r[0]||'(sem status)')===fL.status)&&(!fL.area||r[5]===fL.area)&&(!q||norm([r[1],r[2],r[8],r[9],r[11],r[13],r[19],r[25]].join(' ')).includes(q)));
+    const ini=rows.filter(r=>r[0]!=='NÃO INICIADO'), v=ini.reduce((a,r)=>a+(r[21]||0),0);
+    $('#lInd').innerHTML=ind([{k:'Contratações',v:int(rows.length),s:fL.status?rotEtapa(fL.status):'todas as etapas'},{k:'Já iniciadas',v:int(ini.length),s:'saíram de “não iniciado”'},{k:'Homologadas',v:int(rows.filter(r=>r[0]==='HOMOLOGADO').length),s:'certames concluídos'},{k:'Valor estimado',v:esc(mi(v)),s:'das iniciadas'}]);
+    tabela($('#lTab'),{chave:r=>r[1]+'|'+r[2]+'|'+r[9],linhas:rows,ordem:2,limite:50,cols:[
+      {t:'Contratação',k:r=>r[8]||r[1],h:r=>`<b>${esc(r[8]||'DFD '+r[1])}</b><span class="sub">${esc(r[7]?cx(r[7]):'modalidade a definir')}</span>`},
+      {t:'Objeto',cls:'obj',k:r=>norm(r[9]),h:r=>`${esc(r[9])}<span class="sub">${esc([r[5],r[11]].filter(Boolean).join(' · '))}</span>`},
+      {t:'Valor estimado',num:1,k:r=>r[21]||0,h:r=>esc(r[21]==null?'—':brl(r[21]))},
+      {t:'Etapa',k:r=>ETAPAS.indexOf(r[0]),h:r=>{ const c=r[0]==='HOMOLOGADO'||r[0]==='EXECUÇÃO CONTRATUAL'?'ok':['REVOGADO','ARQUIVADO','SUSPENSO'].includes(r[0])?'bad':r[0]==='NÃO INICIADO'?'neu':'warn'; return `<span class="selo ${c}">${esc(rotEtapa(r[0]))}</span>`; }}],
+      detalhe:r=>ficha([['DFD',esc(r[1])],['ID no PCA',esc(r[2])],['Ano do PCA',esc(r[6])],['Natureza',esc(r[10])],['Sistema',esc(r[11])],['Complexidade',esc(r[12])],['Seção',esc(r[13])],['Demanda',esc(r[14])],['Processo (PAG)',esc(r[19])],['Agente de contratação',esc(r[25])],
+        ['Publicação',dtbr(r[23])],['Abertura da sessão',dtbr(r[24])],['Itens',r[18]==null?'':int(r[18])],['Homologados',r[30]==null?'':int(r[30])+' ('+esc(r[31])+')'],['Desertos / fracassados',(r[27]==null&&r[28]==null)?'':int(r[27])+' / '+int(r[28])]])});
+  };
+  el.querySelectorAll('.etapas li').forEach(li=>{ const f=()=>{ fL.status=fL.status===li.dataset.s?'':li.dataset.s; vLicitacoes(el); }; li.onclick=f; li.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); f(); } }; });
+  let t; const deb=f=>{ clearTimeout(t); t=setTimeout(f,180); };
+  $('#lQ').oninput=e=>{ fL.q=e.target.value; deb(go); };
+  $('#lA').onchange=e=>{ fL.area=e.target.value; go(); };
+  $('#lLimpar').onclick=()=>{ Object.assign(fL,{q:'',status:'',area:''}); vLicitacoes(el); };
+  go();
+}
+
+/* ================= RESTOS A PAGAR ================= */
+const fR={gc:''};
+function vRP(el){
+  if(!RP){ el.innerHTML='<h2 class="tit">Restos a pagar</h2><p class="lede">A aba de restos a pagar não respondeu. Toque em Atualizar para tentar de novo.</p>'; return; }
+  const n=RP.meses.length-1, ci=fR.gc?RP.cmdos.indexOf(fR.gc):RP.cmdos.length, serie=RP.rows.map(r=>r[ci]);
+  const at=serie[n], ini=serie[0];
+  el.innerHTML=`<h2 class="tit">Restos a pagar</h2><p class="lede">Saldo de restos a pagar de exercícios anteriores ao fim de cada mês, por Grande Comando. Quanto mais baixa a coluna, mais RP já foi pago ou cancelado.</p>
+  ${ind([{k:'Saldo em '+RP.meses[n].toLowerCase(),v:esc(mi(at)),s:brl(at)},{k:'Saldo em '+RP.meses[0].toLowerCase(),v:esc(mi(ini)),s:'início da série'},{k:'Reduzido no ano',v:pf(pct(ini-at,ini)),s:mi(ini-at)+' a menos'}])}
+  <div class="filtros"><label>Grande Comando<select id="rGc">${opcoes(RP.cmdos,fR.gc,'Todos')}</select></label></div>
+  <div class="painel" style="margin-bottom:20px"><h3>Saldo ao fim de cada mês${fR.gc?' · '+esc(fR.gc):''}</h3>${colunasMes(RP.meses.map((m,i)=>({r:m.slice(0,3).toLowerCase(),t:m.toLowerCase(),v:serie[i]})),{rot:'Saldo de restos a pagar por mês',fmt:v=>brl(v),fmtTopo:v=>miS(v)})}</div>
+  <div id="rTab"></div>`;
+  const linhas=RP.cmdos.map((c,i)=>({c,ini:RP.rows[0][i],at:RP.rows[n][i]})).filter(x=>x.ini||x.at);
+  tabela($('#rTab'),{chave:x=>x.c,linhas,ordem:2,cols:[
+    {t:'Grande Comando',k:x=>x.c,h:x=>`<b>${esc(x.c)}</b>`},
+    {t:'Saldo em '+RP.meses[0].toLowerCase(),num:1,k:x=>x.ini,h:x=>esc(brl(x.ini))},
+    {t:'Saldo em '+RP.meses[n].toLowerCase(),num:1,k:x=>x.at,h:x=>esc(brl(x.at))},
+    {t:'Reduzido',num:1,k:x=>pct(x.ini-x.at,x.ini),h:x=>`${pf(pct(x.ini-x.at,x.ini))}<span class="mini"><i style="width:${Math.max(0,Math.min(100,pct(x.ini-x.at,x.ini)))}%"></i></span>`}],
+    rodape:ls=>{ const a=ls.reduce((s,x)=>s+x.ini,0), b=ls.reduce((s,x)=>s+x.at,0); return `<td>Total</td><td class="num">${esc(brl(a))}</td><td class="num">${esc(brl(b))}</td><td class="num">${pf(pct(a-b,a))}</td>`; }});
+  $('#rGc').onchange=e=>{ fR.gc=e.target.value; vRP(el); };
+}
+
+/* ---------- tema ---------- */
+(()=>{ const nomes={auto:'automático',light:'claro',dark:'escuro'}; let t='auto'; try{ t=localStorage.getItem('caeExecTema')||'auto'; }catch(e){}
+  const ap=()=>{ if(t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); $('#tema').textContent='Tema: '+nomes[t]; };
+  $('#tema').onclick=()=>{ t={auto:'light',light:'dark',dark:'auto'}[t]; try{ localStorage.setItem('caeExecTema',t); }catch(e){} ap(); }; ap(); })();
+
+/* ---------- início ---------- */
+$('#atualizar').onclick=()=>atualizar(true);
+mostrar(rota());
+fetch('/tools/siglas.json').then(r=>r.ok?r.json():{}).catch(()=>({})).then(s=>{ SIGLAS=s||{}; atualizar(false); });
+setInterval(()=>{ if(document.visibilityState==='visible') atualizar(false); },10*60*1000);
+</script>
+</body>
+</html>

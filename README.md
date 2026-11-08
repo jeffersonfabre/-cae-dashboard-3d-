@@ -5,7 +5,7 @@ Painel 3D (three.js) do Centro de Aquisições Específicas (CAE, UASG 120195): 
 - Página única: `index.html` (sem build)
 - Dados de exemplo; integração futura com Tesouro Gerencial, SIAFI e Comprasnet/PNCP
 
-Desenvolvido por **DomDevLabs** · v1.16.12
+Desenvolvido por **DomDevLabs** · v1.16.13
 
 ## Instalar no celular
 
@@ -21,3 +21,9 @@ ao abrir, a cada 10 minutos e quando o botão **Atualizar** (topo da tela) é cl
 Se o Google não responder, o site usa a cópia de reserva embutida no `index.html` e avisa na tela.
 
 Para regravar a cópia de reserva: Actions › “Atualizar snapshot de reserva” › Run workflow (ou `node tools/gerar_snapshot.mjs --fetch --bump`).
+
+## Painel executivo (`/executivo`)
+
+Versão corporativa do painel, sem 3D: visão geral da execução orçamentária, orçamento por UG/ND/PI, notas de empenho, contratos, atas de registro, licitações do PCA e restos a pagar.
+Lê a mesma planilha-banco ao vivo (mesma biblioteca `tools/dados.lib.js`) e, se o Google não responder, usa a cópia de reserva embutida no `index.html` do painel 3D.
+Endereço: https://cae-dashboard-3d.vercel.app/executivo · v1.0.0
